@@ -3,28 +3,29 @@
 <link href="~/Content/PagedList.css" rel="stylesheet" type="text/css" />
 
 @{
-    ViewBag.Title = "ПРИЕМ ТОВАРА";
+    ViewBag.Title = "ИНВОЙСЫ";
 }
 
 <DIV class="main-text">
     <h1 id="cntr">@ViewBag.Title</h1>
     <div class="reg-form">
         <br>
-        <p>
-            @Html.ActionLink("НОВЫЙ ПРИЕМ", "Create") |
-            @Html.ActionLink("РАСПРЕДЕЛЕНИЕ", "Distribution") |
-            <a href="~/Content/files/ALFAPARTS-Invoice.xlsx">ШАБЛОН</a>
-
-        </p>
         @using (Html.BeginForm("Index", "Invoices", FormMethod.Get))
         {
             <p>
-                @Html.TextBox("SearchString", ViewBag.CurrentFilter as string, new { placeholder = "НОМЕР ПРИЕМА" })
+                @Html.TextBox("SearchString", ViewBag.CurrentFilter as string, new { placeholder = "НОМЕР ИНВОЙСА" })
                 <input type="submit" value="НАЙТИ" />
             </p>
         }
     </div>
 
+<div class="alink2" id="cntr">
+            @Html.ActionLink("НОВЫЙ ИНВОЙС", "Create")
+            @Html.ActionLink("РАСПРЕДЕЛЕНИЕ", "Distribution")
+            <a href="~/Content/files/ALFAPARTS-Invoice.xlsx">СКАЧАТЬ ШАБЛОН</a>
+
+</div>	
+	
     <table class="table">
         <tr>
 
@@ -32,7 +33,7 @@
                 @Html.ActionLink("Дата", "Index", new { sortOrder = ViewBag.DateSortParm, currentFilter = ViewBag.CurrentFilter })
             </th>
             <th>
-                @Html.ActionLink("Номер", "Index", new { sortOrder = ViewBag.NumberSortParm, currentFilter = ViewBag.CurrentFilter })
+                @Html.ActionLink("Номер инвойса", "Index", new { sortOrder = ViewBag.NumberSortParm, currentFilter = ViewBag.CurrentFilter })
             </th>
             <th>
                 Поставщик

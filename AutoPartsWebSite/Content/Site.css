@@ -221,7 +221,7 @@ select::-ms-expand {display: none;}
 .but1, .but2 { float: left; margin:5px 10px 5px 10px; display: inline-block; width: 90px; border: 1px solid #48477a; background-color: #48477a; color:#fff; height: 42px; line-height: 40px; padding: 0 10px 0 10px; border: 0; cursor: pointer; text-align:center;}
 .but2 { float: right; }
 
-.alink1, .alink2 a {display: inline-block; margin:15px 0 15px 0; width: 210px; border: 1px solid #48477a; background-color: #48477a; color:#fff; height: 42px; line-height: 40px; padding: 0 10px 0 10px; border: 0; cursor: pointer; text-align:center; text-decoration: none;}
+.alink1, .alink2 a {display: inline-block; margin:20px; width: 210px; border: 1px solid #48477a; background-color: #48477a; color:#fff; height: 42px; line-height: 40px; padding: 0 10px 0 10px; border: 0; cursor: pointer; text-align:center; text-decoration: none;}
 .alink1:hover, .alink2 a:hover{background-color: #e50040; color: #fff;}
 
 .del { margin:5px 10px 5px 10px; display: inline-block; width: 30px; border: 1px solid #e50040; background-color: #e50040; color:#fff; height: 30px; line-height: 30px; padding: 0 10px 0 10px; border: 0; cursor: pointer; text-align:center;}
@@ -229,7 +229,7 @@ select::-ms-expand {display: none;}
 
 table {width: 100%; margin:auto;}
 table th {
-	background: #e7f1fa; padding: 0.62rem; color: #000;
+	background: #e7f1fa; padding: 0.4rem; color: #000;
 }
 table tr:nth-child(2n+1) {
 	background-color: #e7f1fa;
@@ -238,7 +238,7 @@ table tr:nth-child(2n) {
 	background-color: rgb(255, 255, 255);
 }
 table td {
-	border-width: 0px 1px 1px; border-style: none solid solid; border-color: currentColor #e7f1fa #e7f1fa; padding: 0.62rem; border-image: none; text-align: center; font-size: 0.9em; vertical-align: middle;
+	border-width: 0px 1px 1px; border-style: none solid solid; border-color: currentColor #e7f1fa #e7f1fa; padding: 0.32rem; border-image: none; text-align: center; font-size: 0.9em; vertical-align: middle;
 }
 .eksp{margin:-15px 0 0 0; padding: 0 0 15px 0;}
 
