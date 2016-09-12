@@ -21,7 +21,7 @@
 
 <div class="alink2" id="cntr">
             @Html.ActionLink("НОВЫЙ ИНВОЙС", "Create")
-            @Html.ActionLink("РАСПРЕДЕЛЕНИЕ", "Distribution")
+            @*@Html.ActionLink("РАСПРЕДЕЛЕНИЕ", "Distribution")*@
             <a href="~/Content/files/ALFAPARTS-Invoice.xlsx">СКАЧАТЬ ШАБЛОН</a>
 
 </div>	
@@ -40,6 +40,9 @@
             </th>
             <th>
                 Статус
+            </th>
+            <th>
+                К-во позиций
             </th>
             <th>
                 Пользователь
@@ -66,11 +69,14 @@
                     @item.getInvoiceStates().First(itm => itm.Value == item.State.ToString()).Text
                 </td>
                 <td>
+                    @Html.DisplayFor(modelItem => item.LinesNumber)
+                </td>
+                <td>
                     @Html.DisplayFor(modelItem => item.UserName)
                 </td>
                 <td>
                     @Html.ActionLink("Изменить", "Edit", new { id = item.Id }) |
-                    @Html.ActionLink("Просмотр", "Details", new { id = item.Id }) |
+                    @Html.ActionLink("Распределить", "IndexInvoiceItems", new { id = item.Id }) |
                     @Html.ActionLink("Удалить", "Delete", new { id = item.Id })
                 </td>
             </tr>

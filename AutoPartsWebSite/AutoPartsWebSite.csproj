@@ -300,6 +300,7 @@
     <Content Include="Views\Invoices\Index.cshtml" />
     <Content Include="Content\files\ALFAPARTS-Invoice.xlsx" />
     <Content Include="Views\Invoices\Distribution.cshtml" />
+    <Content Include="Views\Invoices\IndexInvoiceItems.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

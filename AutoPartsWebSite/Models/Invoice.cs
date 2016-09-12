@@ -49,6 +49,7 @@
         [DisplayFormat(DataFormatString = "{0:dd.MM.yyyy}", ApplyFormatInEditMode = true)]
         [Display(Name = "Дата")]
         public DateTime? Date { get; set; }
+        
 
         [Required]
         [StringLength(50)]
@@ -68,14 +69,19 @@
             });
             StateItems.Add(new SelectListItem
             {
-                Text = "В работе",
+                Text = "Распределен",
                 Value = "2",
                 Selected = true
             });
             StateItems.Add(new SelectListItem
             {
-                Text = "Разложен",
+                Text = "Распределен частично",
                 Value = "3"
+            });
+            StateItems.Add(new SelectListItem
+            {
+                Text = "Закрыт",
+                Value = "4"
             });
             return StateItems;
         }

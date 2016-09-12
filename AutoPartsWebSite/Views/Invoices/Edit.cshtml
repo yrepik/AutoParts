@@ -1,7 +1,7 @@
 ﻿@model AutoPartsWebSite.Models.Invoice
 
 @{
-    ViewBag.Title = "ИЗМЕНИТЬ ПРИЕМ";
+    ViewBag.Title = "ИЗМЕНИТЬ ИНВОЙС";
 }
 
 <DIV class="main-text">
@@ -16,8 +16,17 @@
             <div class="form-horizontal">
                 @Html.ValidationSummary(false, "", new { @class = "text-danger" })
                 @Html.HiddenFor(model => model.Id)
-                @Html.HiddenFor(model => model.UserId)  
-                @Html.HiddenFor(model => model.Date)                          
+                @Html.HiddenFor(model => model.UserId) 
+                @Html.HiddenFor(model => model.LinesNumber) 
+                                                        
+                @Html.HiddenFor(model => model.FileName)
+                
+                <div class="form-group">
+                    @Html.LabelFor(model => model.Date, htmlAttributes: new { @class = "control-label col-md-2" })
+                    <div class="col-md-10">
+                        @Html.EditorFor(model => model.Date, new { htmlAttributes = new { @class = "form-control", @Value = Model.Date.Value.ToString("yyyy-MM-dd") } })
+                    </div>
+                </div>
 
                 <div class="form-group">
                     @Html.LabelFor(model => model.Number, htmlAttributes: new { @class = "control-label col-md-2" })
@@ -40,15 +49,13 @@
                     </div>
                 </div>
 
-                <div class="form-group">
+                @*<div class="form-group">
                     @Html.LabelFor(model => model.FileName, htmlAttributes: new { @class = "control-label col-md-2" })
-                    <div class="col-md-10">
-                        @*@Html.EditorFor(model => model.FileName, new { htmlAttributes = new { @class = "form-control" } })
-                        @Html.ValidationMessageFor(model => model.FileName, "", new { @class = "text-danger" })*@
+                    <div class="col-md-10">                        
                         <input type="file" name="upload" id="upload_hidden" onchange="document.getElementById('upload_visible').value = this.value;" accept=".xlsx" />
                         <input type="text" readonly="1" id="upload_visible" onclick="document.getElementById('upload_hidden').click();" />
                     </div>
-                </div>
+                </div>*@
 
                 <div class="form-group">
                     <div class="col-md-offset-2 col-md-10">
@@ -60,6 +67,6 @@
     </div>
     <br />
     <div id="cntr">
-        @Html.ActionLink("Назад в прием товаров", "Index")
+        @Html.ActionLink("Назад в инвойсы", "Index")
     </div>
 </DIV>

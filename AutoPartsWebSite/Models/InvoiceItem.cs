@@ -26,6 +26,9 @@
         [Display(Name = "Номер")]
         public string Number { get; set; }
 
+        [Display(Name = "Марка")]
+        public string Brand { get; set; }
+
         [Display(Name = "Количество")]
         public string Quantity { get; set; }
 
@@ -38,19 +41,24 @@
             List<SelectListItem> StateItems = new List<SelectListItem>();
             StateItems.Add(new SelectListItem
             {
-                Text = "Статус 1",
+                Text = "Загружен",
                 Value = "1"
             });
             StateItems.Add(new SelectListItem
             {
-                Text = "Статус 2",
+                Text = "Распределен",
                 Value = "2",
                 Selected = true
             });
             StateItems.Add(new SelectListItem
             {
-                Text = "Статус 3",
+                Text = "Распределен частично",
                 Value = "3"
+            });
+            StateItems.Add(new SelectListItem
+            {
+                Text = "Закрыт",
+                Value = "4"
             });
             return StateItems;
         }

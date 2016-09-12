@@ -81,9 +81,6 @@ namespace AutoPartsWebSite.Controllers
         public ActionResult Create()
         {
             ViewBag.UserId = User.Identity.GetUserId();
-            ViewBag.Date = System.DateTime.Now.ToString("yyyy-MM-dd");
-
-
             Invoice invoice = new Invoice();
             ViewBag.SuppliersList = from supplier in db.Suppliers
                                     select new SelectListItem { Text = supplier.Name, Value = supplier.Id.ToString() };
@@ -95,7 +92,7 @@ namespace AutoPartsWebSite.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "Id,UserId,Data,Number,State,SupplierId,FileName")] Invoice invoice, HttpPostedFileBase upload)
+        public ActionResult Create([Bind(Include = "Id,UserId,Date,Number,State,SupplierId,FileName")] Invoice invoice, HttpPostedFileBase upload)
         {
             ViewBag.SuppliersList = from supplier in db.Suppliers
                                     select new SelectListItem { Text = supplier.Name, Value = supplier.Id.ToString() };
@@ -104,7 +101,7 @@ namespace AutoPartsWebSite.Controllers
                 try
                 {
                     invoice.UserId = User.Identity.GetUserId();
-                    invoice.Date = System.DateTime.Now;
+                    //invoice.Date = System.DateTime.Now;
                     invoice.FileName = System.IO.Path.GetFileName(upload.FileName);
                     invoice.State = 1;
                     // store data into DB
@@ -113,7 +110,7 @@ namespace AutoPartsWebSite.Controllers
                     // parse data from XSLT file and store it into DB
                     if (ExcelImport(invoice.Id, upload))
                     {
-                        TempData["shortMessage"] = "Загружено.";
+                        ViewBag.Message = "Загружено.";
                         return RedirectToAction("Index");
                     }
                     //TempData["shortMessage"] = "Загружено.";
@@ -121,7 +118,7 @@ namespace AutoPartsWebSite.Controllers
                 }
                 catch (Exception ex)
                 {
-                    TempData["shortMessage"] = "Ошибка загрузки:" + ex.Message.ToString();
+                    ViewBag.Message = "Ошибка загрузки:" + ex.Message.ToString();
                     return View(invoice);
                 }
             }
@@ -150,22 +147,21 @@ namespace AutoPartsWebSite.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "Id,UserId,Data,Number,State,SupplierId,FileName")] Invoice invoice, HttpPostedFileBase upload)
+        public ActionResult Edit([Bind(Include = "Id,UserId,Date,Number,State,SupplierId,FileName,LinesNumber")] Invoice invoice, HttpPostedFileBase upload)
         {
             ViewBag.SuppliersList = from supplier in db.Suppliers
                                     select new SelectListItem { Text = supplier.Name, Value = supplier.Id.ToString() };
             if (ModelState.IsValid)
             {
                 invoice.UserId = User.Identity.GetUserId();
-                invoice.Date = System.DateTime.Now;
+                //invoice.Date = System.DateTime.Now;
                 if (upload != null && upload.ContentLength > 0)
                 {
                     invoice.FileName = System.IO.Path.GetFileName(upload.FileName);
-                }
                     if (ExcelImport(invoice.Id, upload))
-                {
-                    TempData["shortMessage"] = "Загружено.";
-                    return RedirectToAction("Index");
+                    {
+                        TempData["shortMessage"] = "Загружено.";                     
+                    }
                 }
                 db.Entry(invoice).State = EntityState.Modified;
                 db.SaveChanges();
@@ -195,7 +191,9 @@ namespace AutoPartsWebSite.Controllers
         public ActionResult DeleteConfirmed(int id)
         {
             Invoice invoice = db.Invoices.Find(id);
-            db.Invoices.Remove(invoice);
+            var invoiceItems = from c in db.InvoiceItems where c.InvoiceId.Equals(invoice.Id) select c;
+            db.InvoiceItems.RemoveRange(invoiceItems);
+            db.Invoices.Remove(invoice);            
             db.SaveChanges();
             return RedirectToAction("Index");
         }
@@ -203,9 +201,11 @@ namespace AutoPartsWebSite.Controllers
 
         private bool ExcelImport(int invoiceId, HttpPostedFileBase upload)
         {
-            int firstDataRow = 4;
+            int firstDataRow = 2;
+            int linesNumber = 0;
             try
             {
+                Invoice invoice = db.Invoices.Find(invoiceId);
                 if (upload != null && upload.ContentLength > 0)
                 {
                     // clear the table InvoiceItem by InvoiceId
@@ -222,11 +222,15 @@ namespace AutoPartsWebSite.Controllers
                                 InvoiceId = invoiceId,
                                 Date = System.DateTime.Now,
                                 Number = worksheet.Cells["A" + i.ToString()].Value.ToString(),
-                                Quantity = worksheet.Cells["B" + i.ToString()].Value.ToString()
+                                Brand = worksheet.Cells["B" + i.ToString()].Value.ToString(),
+                                Quantity = worksheet.Cells["C" + i.ToString()].Value.ToString(),
+                                State = 1
                             };
                             db.InvoiceItems.Add(invoiceItem);
+                            linesNumber++;
                         }
                     }
+                    invoice.LinesNumber = linesNumber;
                     db.SaveChanges();
                     ViewBag.Message = "Загружено.";
                     return true;
@@ -286,6 +290,25 @@ namespace AutoPartsWebSite.Controllers
             int pageNumber = (page ?? 1);
             return View(invoices.ToPagedList(pageNumber, pageSize));
             //return View(db.Invoices.ToList());
+        }
+
+        public ActionResult IndexInvoiceItems(int? id)
+        {
+            if (id == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+            Invoice invoice = db.Invoices.Find(id);
+            
+            var invoiceItems = db.InvoiceItems.Include(o => o.Invoice)
+                .Where(o => o.Invoice.Id == id);
+
+            if (invoiceItems == null)
+            {
+                return HttpNotFound();
+            }
+            ViewBag.CurrentInvoice = invoice;
+            return View(invoiceItems.ToList());
         }
 
         protected override void Dispose(bool disposing)

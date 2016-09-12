@@ -1,0 +1,54 @@
+﻿@model IEnumerable<AutoPartsWebSite.Models.InvoiceItem>
+
+@{
+    ViewBag.Title = "ПОЗИЦИИ ИНВОЙСА № " + ViewBag.CurrentInvoice.Number + " от " + ViewBag.CurrentInvoice.Date.ToString("dd.MM.yyyy");
+}
+
+<DIV class="main-text">
+    <h1 id="cntr">@ViewBag.Title</h1>
+</DIV>
+<table class="table">
+    <tr>
+        <th>
+            Марка
+        </th>
+        <th>
+            Номер
+        </th>
+        <th>
+            Количество
+        </th>        
+        <th>
+            Статус
+        </th>
+        <th></th>
+    </tr>
+
+@foreach (var item in Model) {
+    <tr>        
+        <td>
+            @Html.DisplayFor(modelItem => item.Brand)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Number)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Quantity)
+        </td>        
+        <td>            
+            @item.getInvoiceItemStates().First(itm => itm.Value == item.State.ToString()).Text
+        </td>
+        <td>
+            @Html.ActionLink("Edit", "Edit", new { id=item.Id }) |
+            @Html.ActionLink("Details", "Details", new { id=item.Id }) |
+            @Html.ActionLink("Delete", "Delete", new { id=item.Id })
+        </td>
+    </tr>
+}
+
+</table>
+
+<br>
+<div id="cntr">
+    @Html.ActionLink("Назад к списку инвойсов", "Index")
+</div>
