@@ -7,6 +7,10 @@
 <DIV class="main-text">
     <h1 id="cntr">@ViewBag.Title</h1>
 </DIV>
+
+<div class="alink2" id="cntr"> 
+    @Html.ActionLink("РАСПРЕДЕЛИТЬ", "Distribution", new { id = Model.FirstOrDefault().InvoiceId })
+</div>	
 <table class="table">
     <tr>
         <th>
@@ -21,7 +25,9 @@
         <th>
             Статус
         </th>
-        <th></th>
+        <th>
+            Распределение
+        </th>
     </tr>
 
 @foreach (var item in Model) {
@@ -38,10 +44,8 @@
         <td>            
             @item.getInvoiceItemStates().First(itm => itm.Value == item.State.ToString()).Text
         </td>
-        <td>
-            @Html.ActionLink("Edit", "Edit", new { id=item.Id }) |
-            @Html.ActionLink("Details", "Details", new { id=item.Id }) |
-            @Html.ActionLink("Delete", "Delete", new { id=item.Id })
+        <td>            
+            @Html.Action("IndexInvoiceDistribution", new { id = item.Id })
         </td>
     </tr>
 }

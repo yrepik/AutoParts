@@ -301,6 +301,7 @@
     <Content Include="Content\files\ALFAPARTS-Invoice.xlsx" />
     <Content Include="Views\Invoices\Distribution.cshtml" />
     <Content Include="Views\Invoices\IndexInvoiceItems.cshtml" />
+    <Content Include="Views\Invoices\IndexInvoiceDistribution.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -416,6 +417,7 @@
     <Compile Include="Models\ImportTemplate.cs" />
     <Compile Include="Models\ImportTemplateModel.cs" />
     <Compile Include="Models\Invoice.cs" />
+    <Compile Include="Models\InvoiceDistribution.cs" />
     <Compile Include="Models\InvoiceItem.cs" />
     <Compile Include="Models\InvoiceItemOrderItem.cs" />
     <Compile Include="Models\InvoiceModel.cs" />

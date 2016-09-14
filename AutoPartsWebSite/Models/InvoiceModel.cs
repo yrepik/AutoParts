@@ -17,6 +17,7 @@
         public virtual DbSet<InvoiceItem> InvoiceItems { get; set; }
         public virtual DbSet<Order> Orders { get; set; }
         public virtual DbSet<OrderItem> OrderItems { get; set; }
+        public virtual DbSet<InvoiceDistribution> InvoiceDistributions { get; set; }
         //public virtual DbSet<InvoiceItemOrderItem> InvoiceItemOrderItems { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)

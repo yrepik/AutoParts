@@ -14,6 +14,7 @@ using PagedList;
 
 namespace AutoPartsWebSite.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class InvoicesController : Controller
     {
         private InvoiceModel db = new InvoiceModel();
@@ -249,47 +250,29 @@ namespace AutoPartsWebSite.Controllers
         }
 
         // DO: Distribution
-        public ActionResult Distribution(string sortOrder, string currentFilter, string searchString, int? page)
+        public ActionResult Distribution(int? id)
         {
-            ViewBag.CurrentSort = sortOrder;
-            ViewBag.NumberSortParm = String.IsNullOrEmpty(sortOrder) ? "number_desc" : "";
-            ViewBag.DateSortParm = sortOrder == "Date" ? "date_desc" : "Date";
+            if (id == null)
+            {
+                RedirectToAction("Index");
+            }
 
-            if (searchString != null)
+            Invoice invoice = db.Invoices.Find(id);
+            if (invoice == null)
             {
-                page = 1;
+                RedirectToAction("Index");
             }
-            else
+            var invoiceItems = db.InvoiceItems.Include(o => o.Invoice)
+                .Where(o => o.Invoice.Id == id);            
+            foreach (InvoiceItem iItem in invoiceItems)
             {
-                searchString = currentFilter;
+                if (DistributeInvoiceItem(iItem.Id))
+                {
+                    invoice.State = 3;                     
+                }
             }
-            ViewBag.CurrentFilter = searchString;
-
-            var invoices = from s in db.Invoices
-                           select s;
-            if (!String.IsNullOrEmpty(searchString))
-            {
-                invoices = invoices.Where(s => s.Number.Contains(searchString));
-            }
-            switch (sortOrder)
-            {
-                case "number_desc":
-                    invoices = invoices.OrderByDescending(s => s.Number);
-                    break;
-                case "Date":
-                    invoices = invoices.OrderBy(s => s.Date);
-                    break;
-                case "date_desc":
-                    invoices = invoices.OrderByDescending(s => s.Date);
-                    break;
-                default:
-                    invoices = invoices.OrderBy(s => s.Number);
-                    break;
-            }
-            int pageSize = 20;
-            int pageNumber = (page ?? 1);
-            return View(invoices.ToPagedList(pageNumber, pageSize));
-            //return View(db.Invoices.ToList());
+            db.SaveChanges();
+            return RedirectToAction("IndexInvoiceItems", new { id = id });            
         }
 
         public ActionResult IndexInvoiceItems(int? id)
@@ -309,6 +292,81 @@ namespace AutoPartsWebSite.Controllers
             }
             ViewBag.CurrentInvoice = invoice;
             return View(invoiceItems.ToList());
+        }
+
+        public ActionResult IndexInvoiceDistribution(int? id)
+        {
+
+            if (id == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+            var invoiceDistributions = from c in db.InvoiceDistributions where c.InvoiceItemId == id select c;
+            return PartialView(invoiceDistributions.ToList());            
+        }
+
+        private Boolean DistributeInvoiceItem(int id)
+        {
+            try
+            {
+                // cleare Distribution table by InvoiceItemId
+                var invDistr = from d in db.InvoiceDistributions where d.InvoiceItemId.Equals(id) select d;
+                db.InvoiceDistributions.RemoveRange(invDistr);
+
+                InvoiceItem invoiceItem = db.InvoiceItems.Find(id);
+                if (invoiceItem == null)
+                {
+                    return false;
+                }
+                int invoiceItemQuantity = Convert.ToInt32(invoiceItem.Quantity);
+                int OrderItemAmount = -1;
+                var orderItems = (from oi in db.OrderItems
+                                  where (oi.Number == invoiceItem.Number
+                                          && oi.Brand == invoiceItem.Brand
+                                          && oi.State == 1
+                                        )
+                                  select oi)
+                                .ToList()
+                                .OrderByDescending(ou => ou.Amount)
+                                .ThenByDescending(ou => ou.Data);
+                foreach (OrderItem oItem in orderItems)
+                {
+                    OrderItemAmount = Convert.ToInt32(oItem.Amount);
+                    if (invoiceItemQuantity >= OrderItemAmount)
+                    {
+                        // add OrderItemId to Distribution table
+                        if (ModelState.IsValid)
+                        {
+                            InvoiceDistribution invoiceDistribution = new InvoiceDistribution
+                            {
+                                InvoiceItemId = invoiceItem.Id,
+                                OrderItemId = oItem.Id,
+                                Quantity = Convert.ToInt32(oItem.Amount)
+                            };
+                            db.InvoiceDistributions.Add(invoiceDistribution);
+                            invoiceItemQuantity = invoiceItemQuantity - OrderItemAmount;                            
+                        }
+                    }
+                }
+                if (OrderItemAmount == -1)       // not distributed
+                {
+                    invoiceItem.State = 1;
+                }
+                if (invoiceItemQuantity == 0)    // distributed
+                {
+                    invoiceItem.State = 2;
+                }
+                if (invoiceItemQuantity != 0 && OrderItemAmount > 0)    // distributed with rest
+                {
+                    invoiceItem.State = 3;      
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                ViewBag.Message = "Ошибка:" + ex.Message.ToString();
+                return false;
+            }
         }
 
         protected override void Dispose(bool disposing)
