@@ -1,0 +1,26 @@
+﻿@model AutoPartsWebSite.Models.InvoiceDistribution
+
+@{
+    ViewBag.Title = "УДАЛЕНИЕ ПОЗИЦИИ РАСПРЕДЕЛЕНИЯ";
+}
+<DIV class="main-text">
+    <h1 id="cntr">@ViewBag.Title</h1>
+    <div class="reg-form">
+        <br>
+        <h3>Заказ: @Html.DisplayFor(model => model.OrderId) <br>
+            Позиция: @Html.DisplayFor(model => model.OrderItemId) <br>
+            Дата: @Html.DisplayFor(model => model.OrderDate) <br>
+            Заказчик: @Html.DisplayFor(model => model.UserName) <br>
+            К-во: @Html.DisplayFor(model => model.Quantity)</h3>
+            
+            @using (Html.BeginForm())
+            {
+                @Html.AntiForgeryToken()
+                <input type="submit" value="Удалить" class="btn btn-default" />
+            }
+</div>
+
+</DIV>
+<br>
+<div id="cntr">@Html.ActionLink("Назад к списку позиций", "IndexInvoiceItems", new { id = Model.invoiceId })</div>
+</div>

@@ -9,7 +9,7 @@
 </DIV>
 
 <div class="alink2" id="cntr"> 
-    @Html.ActionLink("РАСПРЕДЕЛИТЬ", "Distribution", new { id = Model.FirstOrDefault().InvoiceId })
+    @Html.ActionLink("ПЕРЕ-РАСПРЕДЕЛИТЬ", "Distribution", new { id = Model.FirstOrDefault().InvoiceId })
 </div>	
 <table class="table">
     <tr>
@@ -22,9 +22,9 @@
         <th>
             Количество
         </th>        
-        <th>
+        @*<th>
             Статус
-        </th>
+        </th>*@
         <th>
             Распределение
         </th>
@@ -41,12 +41,14 @@
         <td>
             @Html.DisplayFor(modelItem => item.Quantity)
         </td>        
-        <td>            
+        @*<td>            
             @item.getInvoiceItemStates().First(itm => itm.Value == item.State.ToString()).Text
-        </td>
-        <td>            
+        </td>*@
+        <td>   
+            @*PartialView*@         
             @Html.Action("IndexInvoiceDistribution", new { id = item.Id })
         </td>
+        
     </tr>
 }
 
@@ -56,3 +58,4 @@
 <div id="cntr">
     @Html.ActionLink("Назад к списку инвойсов", "Index")
 </div>
+

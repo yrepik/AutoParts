@@ -1,24 +1,32 @@
 ﻿@model IEnumerable<AutoPartsWebSite.Models.InvoiceDistribution>
 
 <table class="table">
-    <tr> 
+    <tr>
         <th>
-            Заказ
+            Заказ 
         </th>
         <th>
             @Html.DisplayNameFor(model => model.Quantity)
         </th>
+        <th>
+            @Html.ActionLink("+", "CreateInvoiceDistribution", new { id = ViewBag.InvoiceItemId })
+        </th>
     </tr>
 
-@foreach (var item in Model) {
-    <tr>        
-        <td>            
-            № @Html.DisplayFor(modelItem => item.OrderId) # @Html.DisplayFor(modelItem => item.OrderItemId) от @Html.DisplayFor(modelItem => item.OrderDate) - @Html.DisplayFor(modelItem => item.UserName)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.Quantity)
-        </td>       
-    </tr>
-}
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>
+                № @Html.DisplayFor(modelItem => item.OrderId) # @Html.DisplayFor(modelItem => item.OrderItemId) от @Html.DisplayFor(modelItem => item.OrderDate) - @Html.DisplayFor(modelItem => item.UserName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Quantity)
+            </td>
+            <td>
+                @Html.ActionLink("E", "EditInvoiceDistribution", new { id = item.Id, invoiceId = item.invoiceId, invoiceItemId = item.InvoiceItemId }) |
+                @Html.ActionLink("X", "DeleteInvoiceDistribution", new { id = item.Id })
+             </td>                  
+        </tr>
+    }
 
 </table>

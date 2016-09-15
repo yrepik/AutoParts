@@ -77,6 +77,19 @@ namespace AutoPartsWebSite.Controllers
             }
             return View(invoice);
         }
+        public ActionResult DetailsInvoiceItem(int? id)
+        {
+            if (id == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+            InvoiceItem invoiceItem = db.InvoiceItems.Find(id);
+            if (invoiceItem != null)
+            {
+                return PartialView("DetailsInvoiceItem", invoiceItem);
+            }
+            return View(invoiceItem);
+        }
 
         // GET: Invoices/Create
         public ActionResult Create()
@@ -294,17 +307,6 @@ namespace AutoPartsWebSite.Controllers
             return View(invoiceItems.ToList());
         }
 
-        public ActionResult IndexInvoiceDistribution(int? id)
-        {
-
-            if (id == null)
-            {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
-            }
-            var invoiceDistributions = from c in db.InvoiceDistributions where c.InvoiceItemId == id select c;
-            return PartialView(invoiceDistributions.ToList());            
-        }
-
         private Boolean DistributeInvoiceItem(int id)
         {
             try
@@ -368,6 +370,117 @@ namespace AutoPartsWebSite.Controllers
                 return false;
             }
         }
+
+        public ActionResult IndexInvoiceDistribution(int? id)
+        {
+
+            if (id == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+            var invoiceDistributions = from c in db.InvoiceDistributions where c.InvoiceItemId == id select c;
+            ViewBag.InvoiceItemId = id;
+            return PartialView(invoiceDistributions.ToList());
+        }
+
+        public ActionResult DetailsInvoiceDistribution(int id)
+        {
+            InvoiceDistribution invoiceDistribution = db.InvoiceDistributions.Find(id);
+            if (invoiceDistribution != null)
+            {
+                return PartialView("Details", invoiceDistribution);
+            }
+            return View("IndexInvoiceItems");
+        }
+
+        // GET: InvoiceDistribution/Create
+        public ActionResult CreateInvoiceDistribution(int? id)
+        {
+            if (id == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+            InvoiceItem invoiceItem = db.InvoiceItems.Find(id);
+            ViewBag.InvoiceId = invoiceItem.InvoiceId;
+            return View();
+        }
+
+        // POST: InvoiceDistribution/Create
+        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
+        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult CreateInvoiceDistribution([Bind(Include = "Id,InvoiceItemId,OrderItemId,Quantity")] InvoiceDistribution invoiceDistribution)
+        {
+            if (ModelState.IsValid)
+            {
+                db.InvoiceDistributions.Add(invoiceDistribution);
+                db.SaveChanges();
+
+                return RedirectToAction("IndexInvoiceItems", new { id = invoiceDistribution.invoiceId });
+            }
+
+            return View(invoiceDistribution);
+        }
+
+        // GET: InvoiceDistribution/Delete/5
+        public ActionResult DeleteInvoiceDistribution(int? id)
+        {
+            if (id == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+            InvoiceDistribution invoiceDistribution = db.InvoiceDistributions.Find(id);
+            if (invoiceDistribution == null)
+            {
+                return HttpNotFound();
+            }
+            return View(invoiceDistribution);
+        }
+
+        // POST: InvoiceDistribution/Delete/5
+        [HttpPost, ActionName("DeleteInvoiceDistribution")]
+        [ValidateAntiForgeryToken]
+        public ActionResult DeleteConfirmedInvoiceDistribution(int id)
+        {
+            InvoiceDistribution invoiceDistribution = db.InvoiceDistributions.Find(id);
+            int invoiceId = invoiceDistribution.invoiceId;
+            db.InvoiceDistributions.Remove(invoiceDistribution);
+            db.SaveChanges();
+            return RedirectToAction("IndexInvoiceItems", new { id = invoiceId });
+        }
+
+        // GET: InvoiceDistribution/Edit/5
+        public ActionResult EditInvoiceDistribution(int? id)
+        {
+            if (id == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+            InvoiceDistribution invoiceDistribution = db.InvoiceDistributions.Find(id);
+            if (invoiceDistribution == null)
+            {
+                return HttpNotFound();
+            }
+            return View(invoiceDistribution);
+        }
+
+        // POST: InvoiceDistribution/Edit/5
+        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
+        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult EditInvoiceDistribution([Bind(Include = "Id,InvoiceItemId,OrderItemId,Quantity")] InvoiceDistribution invoiceDistribution)
+        {
+            if (ModelState.IsValid)
+            {
+                db.Entry(invoiceDistribution).State = EntityState.Modified;
+                db.SaveChanges();
+                return RedirectToAction("IndexInvoiceItems", new { id = invoiceDistribution.invoiceId });
+            }
+            return View(invoiceDistribution);
+        }
+
 
         protected override void Dispose(bool disposing)
         {
