@@ -6,6 +6,8 @@
     using System.ComponentModel.DataAnnotations.Schema;
     using System.Data.Entity.Spatial;
     using System.Web.Mvc;
+    
+    using System.Linq;
 
     [Table("InvoiceItem")]
     public partial class InvoiceItem
@@ -30,7 +32,25 @@
         public string Brand { get; set; }
 
         [Display(Name = "Количество")]
-        public string Quantity { get; set; }
+        public int Quantity { get; set; }
+
+        [Display(Name = "Остаток")]
+        public int Rest
+        {
+            get
+            {
+                int resultRest = Quantity;
+                InvoiceModel db = new InvoiceModel();
+                var invoiceDistributions = from c in db.InvoiceDistributions
+                                           where c.InvoiceItemId == Id                                         
+                                           select c;
+                foreach(InvoiceDistribution invD in invoiceDistributions)
+                {  
+                    resultRest = resultRest - invD.Quantity;                 
+                }
+                return resultRest;
+            }
+        }
 
         public DateTime? Date { get; set; }
 

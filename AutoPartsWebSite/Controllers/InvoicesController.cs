@@ -237,7 +237,7 @@ namespace AutoPartsWebSite.Controllers
                                 Date = System.DateTime.Now,
                                 Number = worksheet.Cells["A" + i.ToString()].Value.ToString(),
                                 Brand = worksheet.Cells["B" + i.ToString()].Value.ToString(),
-                                Quantity = worksheet.Cells["C" + i.ToString()].Value.ToString(),
+                                Quantity = Convert.ToInt32( worksheet.Cells["C" + i.ToString()].Value.ToString()),
                                 State = 1
                             };
                             db.InvoiceItems.Add(invoiceItem);
@@ -402,6 +402,12 @@ namespace AutoPartsWebSite.Controllers
             }
             InvoiceItem invoiceItem = db.InvoiceItems.Find(id);
             ViewBag.InvoiceId = invoiceItem.InvoiceId;
+            ViewBag.invoiceItemRest = invoiceItem.Rest;
+
+           
+            ViewBag.OrderItemsList = from orderItems in db.OrderItems
+                                 //where invoiceItem.OrderItems.Contains(orderItems)
+                                 select new SelectListItem { Text = orderItems.Number.ToString(), Value = orderItems.Id.ToString() };
             return View();
         }
 
