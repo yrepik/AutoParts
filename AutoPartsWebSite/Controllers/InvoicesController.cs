@@ -371,7 +371,7 @@ namespace AutoPartsWebSite.Controllers
             }
         }
 
-        public ActionResult IndexInvoiceDistribution(int? id)
+        public ActionResult IndexInvoiceDistribution(int? id, int invoiceItemRest)
         {
 
             if (id == null)
@@ -379,6 +379,9 @@ namespace AutoPartsWebSite.Controllers
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
             var invoiceDistributions = from c in db.InvoiceDistributions where c.InvoiceItemId == id select c;
+
+            ViewBag.InvoiceDistributionsCount = invoiceDistributions.Count();
+            ViewBag.invoiceItemRest = invoiceItemRest;
             ViewBag.InvoiceItemId = id;
             return PartialView(invoiceDistributions.ToList());
         }
@@ -404,10 +407,17 @@ namespace AutoPartsWebSite.Controllers
             ViewBag.InvoiceId = invoiceItem.InvoiceId;
             ViewBag.invoiceItemRest = invoiceItem.Rest;
 
-           
-            ViewBag.OrderItemsList = from orderItems in db.OrderItems
-                                 //where invoiceItem.OrderItems.Contains(orderItems)
-                                 select new SelectListItem { Text = orderItems.Number.ToString(), Value = orderItems.Id.ToString() };
+            int[] invOrderItems = (from invoiceDistributions in db.InvoiceDistributions
+                                   where invoiceDistributions.InvoiceItemId == id
+                                   select invoiceDistributions.OrderItemId).ToArray();
+            ViewBag.OrderItemsList = from orderItems in db.OrderItems                                         
+                                    where invOrderItems.Contains(orderItems.Id)
+                                 select new SelectListItem { Text = "Заказ № " + orderItems.OrderId.ToString() 
+                                                                    + " позиция # " + orderItems.Id.ToString()
+                                                                    + " к-во: " + orderItems.Amount.ToString()
+                                                                    //+ " от " + orderItems.Data.Value.ToString("dd.MM.yyyy")
+                                                                    //+ " - " + orderItems.UserName.ToString()
+                                                                    , Value = orderItems.Id.ToString() };
             return View();
         }
 
@@ -420,6 +430,7 @@ namespace AutoPartsWebSite.Controllers
         {
             if (ModelState.IsValid)
             {
+                invoiceDistribution.InvoiceItemId = invoiceDistribution.Id;
                 db.InvoiceDistributions.Add(invoiceDistribution);
                 db.SaveChanges();
 

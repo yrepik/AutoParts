@@ -1,10 +1,14 @@
 ﻿namespace AutoPartsWebSite.Models
 {
+    using IdentityAutoPart.Models;
+    using Microsoft.AspNet.Identity;
+    using Microsoft.AspNet.Identity.Owin;
     using System;
     using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
     using System.ComponentModel.DataAnnotations.Schema;
     using System.Data.Entity.Spatial;
+    using System.Web;
     using System.Web.Mvc;
     [Table("OrderItem")]
     public partial class OrderItem
@@ -123,6 +127,25 @@
                 Value = "6"
             });
             return StateItems;
+        }
+
+        [Display(Name = "Заказчик")]
+        [StringLength(128)]
+        public string UserName
+        {
+            get
+            {
+                ApplicationUserManager userManager = HttpContext.Current.GetOwinContext().GetUserManager<ApplicationUserManager>();
+                var user = userManager.FindById(UserId);
+                if (user != null)
+                {
+                    return user.FullName;
+                }
+                else
+                {
+                    return "";
+                }
+            }
         }
         public virtual ICollection<InvoiceItem> InvoiceItems { get; set; }
     }

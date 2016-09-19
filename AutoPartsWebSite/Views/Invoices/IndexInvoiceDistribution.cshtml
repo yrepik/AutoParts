@@ -9,7 +9,10 @@
             @Html.DisplayNameFor(model => model.Quantity)
         </th>
         <th>
-            @Html.ActionLink("+", "CreateInvoiceDistribution", new { id = ViewBag.InvoiceItemId })
+            @if ((ViewBag.InvoiceDistributionsCount > 0) && (ViewBag.invoiceItemRest > 0))
+            {
+                @Html.ActionLink("+", "CreateInvoiceDistribution", new { id = ViewBag.InvoiceItemId })
+            }
         </th>
     </tr>
 
@@ -23,7 +26,7 @@
                 @Html.DisplayFor(modelItem => item.Quantity)
             </td>
             <td>
-                @Html.ActionLink("E", "EditInvoiceDistribution", new { id = item.Id, invoiceId = item.invoiceId, invoiceItemId = item.InvoiceItemId }) |
+                @*@Html.ActionLink("E", "EditInvoiceDistribution", new { id = item.Id, invoiceId = item.invoiceId, invoiceItemId = item.InvoiceItemId }) |*@
                 @Html.ActionLink("X", "DeleteInvoiceDistribution", new { id = item.Id })
              </td>                  
         </tr>

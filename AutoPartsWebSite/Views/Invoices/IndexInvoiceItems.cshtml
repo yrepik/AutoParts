@@ -46,7 +46,7 @@
         </td>*@
         <td>   
             @*PartialView*@         
-            @Html.Action("IndexInvoiceDistribution", new { id = item.Id })
+            @Html.Action("IndexInvoiceDistribution", new { id = item.Id, invoiceItemRest = item.Rest })
         </td>
         
     </tr>
