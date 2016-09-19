@@ -57,6 +57,8 @@
         [DisplayFormat(DataFormatString = "{0:F2}", ApplyFormatInEditMode = true)]
         [Display(Name = "Цена")]
         public string Price { get; set; }
+
+        [DisplayFormat(DataFormatString = "{0:F2}", ApplyFormatInEditMode = true)]
         [Display(Name = "Базовая цена")]
         public string BasePrice { get; set; }
 
@@ -86,7 +88,11 @@
 
         [Display(Name = "Стоимость")]
         public decimal? Total { get { return Amount * (Convert.ToDecimal(Price)); } }
-                
+
+        [DisplayFormat(DataFormatString = "{0:F2}", ApplyFormatInEditMode = true)]
+        [Display(Name = "Цена")]
+        public decimal? PriceRnd { get { return Convert.ToDecimal(Price); } }
+
         public virtual Order Order { get; set; }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]

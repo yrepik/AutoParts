@@ -34,7 +34,7 @@
                 <div class="form-group">
                     @Html.LabelFor(model => model.Quantity, htmlAttributes: new { @class = "control-label col-md-2" })
                     <div class="col-md-10">                        
-                        @Html.TextBox("Quantity", "0", new { Id = "Quantity", type = "number", min = "0", max = ViewBag.invoiceItemRest })
+                        @Html.TextBox("Quantity", "1", new { Id = "Quantity", type = "number", min = "1", max = ViewBag.invoiceItemRest })
                         @Html.ValidationMessageFor(model => model.Quantity, "", new { @class = "text-danger" })
                     </div>
                 </div>
