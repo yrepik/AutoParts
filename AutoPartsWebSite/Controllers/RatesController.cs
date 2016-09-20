@@ -15,7 +15,7 @@ namespace AutoPartsWebSite.Controllers
 {
     [Authorize(Roles = "Admin")]
     public class RatesController : Controller
-    {
+    {        
         private RateModel db = new RateModel();
         private SupplierModel db_supplier = new SupplierModel();
         
@@ -44,7 +44,7 @@ namespace AutoPartsWebSite.Controllers
         }
 
         // GET: Rates/Create
-        public ActionResult Create(string UserId)
+        public ActionResult Create(string UserId)        
         {
             if (UserId == null)
             {
@@ -71,6 +71,7 @@ namespace AutoPartsWebSite.Controllers
         {
             if (ModelState.IsValid)
             {
+                rate.Data = System.DateTime.Now;
                 db.Rates.Add(rate);
                 db.SaveChanges();
                 return RedirectToAction("IndexUser", "Rates", new { id = rate.UserId });
@@ -80,7 +81,7 @@ namespace AutoPartsWebSite.Controllers
         }
 
         // GET: Rates/Edit/5
-        public ActionResult Edit(int? id)
+        public ActionResult Edit(int? id, string UserId)
         {
             if (id == null)
             {
@@ -93,6 +94,7 @@ namespace AutoPartsWebSite.Controllers
             }
             rate.Suppliers = from supplier in db_supplier.Suppliers
                              select new SelectListItem { Text = supplier.Name, Value = supplier.Id.ToString() };
+            ViewBag.UserId = UserId;
             return View(rate);
         }
 
@@ -113,7 +115,7 @@ namespace AutoPartsWebSite.Controllers
         }
 
         // GET: Rates/Delete/5
-        public ActionResult Delete(int? id)
+        public ActionResult Delete(int? id, string UserId)
         {
             if (id == null)
             {
@@ -124,6 +126,7 @@ namespace AutoPartsWebSite.Controllers
             {
                 return HttpNotFound();
             }
+            ViewBag.UserId = UserId;
             return View(rate);
         }
 
@@ -148,6 +151,7 @@ namespace AutoPartsWebSite.Controllers
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
             // set class var
+
             UserId = id;
             var user = await UserManager.FindByIdAsync(id);
             if (user == null)
