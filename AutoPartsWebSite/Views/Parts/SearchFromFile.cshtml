@@ -2,7 +2,7 @@
 
 
 @{
-    ViewBag.Title = "Поиск запчастей";
+    ViewBag.Title = "Поиск запчастей из файла";
     int maxSearchItemCount = 1;
     int maxSearchRowsCount = 1;
     string searchMsgText = "Для поиска более 1-й позиции требуется авторизация";
@@ -16,19 +16,66 @@
 }
 <DIV class="main-text">
 
-    <h2 id="cntr">ПОИСК ПО НОМЕРУ ЗАПЧАСТИ</h2>
+    <h2 id="cntr">ПОИСК ПО НОМЕРУ ЗАПЧАСТИ ИЗ ФАЙЛА</h2>
 
     <div class="reg-form">
         <br>
 
-        @using (Html.BeginForm("Search", "Parts", FormMethod.Post))
+        @*@using (Html.BeginForm("Search", "Parts", FormMethod.Post))
         {
 
             @Html.TextArea("autopartNumbers", new { rows = maxSearchRowsCount, columns = 60 })
-            @*@Html.Hidden("maxItemCount", maxSearchItemCount)*@
             <input type="submit" value="НАЙТИ" />
 
+        }*@
+
+
+        @using (Html.BeginForm("SearchFromFile", "Parts", null, FormMethod.Post, new { enctype = "multipart/form-data" }))
+        {
+            @Html.AntiForgeryToken()
+
+            <div class="form-horizontal">
+
+                @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                <div class="form-group">
+                    <div class="col-md-10">
+                        <input type="file" placeholder="Имя файла" name="upload" id="upload_hidden" onchange="document.getElementById('upload_visible').value = this.value;" accept=".xlsx" />
+                        <input type="text"  placeholder="Имя файла" readonly="1" id="upload_visible" onclick="document.getElementById('upload_hidden').click();" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-md-10">
+                        <input type="number" value="@ViewBag.DeliveryTime" id="DeliveryTime" name="DeliveryTime" min="1" max="14" placeholder="Срок поставки" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-md-10">
+                        <label><input id="UseAmount" type="checkbox" value="true" name="UseAmount" @(ViewBag.UseAmount ? "checked=\"checked\"" : "")> Кол-во из файла @ViewBag.UseAmount </label>
+                        <input type="hidden" value="false" name="UseAmount" @(ViewBag.UseAmount ? "checked=\"checked\"" : "") />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-md-10">
+                        <label><input id="UseReplacement" type="checkbox" value="true" checked name="UseReplacement" @(ViewBag.UseReplacement ? "checked=\"checked\"" : "")> Искать с заменами @ViewBag.UseReplacement </label>
+                        <input type="hidden" value="false" name="UseReplacement" @(ViewBag.UseReplacement ? "checked=\"checked\"" : "")/>
+                    </div>
+                </div>
+
+
+                <div class="form-group">
+                    <div class="col-md-offset-2 col-md-10">
+                        <input type="submit" value="НАЙТИ" />
+                    </div>
+                </div>
+            </div>
         }
+
+
+
+
 
         @if (ViewBag.SearchLimit < ViewBag.ItemsToSearch)
         {
@@ -37,18 +84,10 @@
             </div>
         }
 
-
-        @*<p>
-                @Html.ActionLink("Create New", "Create")
-            </p>*@
-
     </div>
 </DIV>
 <table class="table">
     <tr>
-        @*<th>
-                @Html.DisplayNameFor(model => model.ImportId)
-            </th>*@
         <th>
             @Html.DisplayName("Марка")
         </th>
@@ -95,10 +134,7 @@
 
         foreach (var item in Model)
         {
-            <tr>
-                @*<td>
-                        @Html.DisplayFor(modelItem => item.ImportId)
-                    </td>*@
+            <tr>  
                 <td>
                     @Html.DisplayFor(modelItem => item.Brand)
                 </td>
@@ -130,6 +166,7 @@
                 {
                     <td>
                         @Html.TextBox("Amount" + item.Id, "0", new { PartId = item.Id, type = "number", min = "0", max = item.Quantity })
+                        @*@Html.DisplayFor(modelItem => item.Amount)*@   
                     </td>
                     <td>
                         @Html.TextBox("Reference1" + item.Id, "", new { PartId = item.Id })

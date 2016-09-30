@@ -350,6 +350,8 @@
     <Content Include="Views\Invoices\IndexInvoiceDistribution.cshtml" />
     <Content Include="Views\Invoices\DeleteInvoiceDistribution.cshtml" />
     <Content Include="Views\Invoices\CreateInvoiceDistribution.cshtml" />
+    <Content Include="Views\Parts\SearchFromFile.cshtml" />
+    <Content Include="Views\Home\IndexFile.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

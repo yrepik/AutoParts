@@ -255,7 +255,7 @@ namespace AutoPartsWebSite.Controllers
             return RedirectToAction("Index");
         }
 
-        public void AddToCartItem(int PartId, int Amount)
+        public void AddToCartItem(int PartId, int Amount, string Reference1, string Reference2)
         {
             string currentUserId = User.Identity.GetUserId();
             var userCart = (from s in db.Carts
@@ -269,6 +269,8 @@ namespace AutoPartsWebSite.Controllers
                         if (Convert.ToInt32(cartpart.Quantity) >= (cartpart.Amount + Amount))
                         {
                             cartpart.Amount = cartpart.Amount + Amount;
+                            cartpart.Reference1 = Reference1;
+                            cartpart.Reference2 = Reference2;
                             if (ModelState.IsValid)
                             {
                                 cartpart.Data = DateTime.Now;
@@ -298,7 +300,8 @@ namespace AutoPartsWebSite.Controllers
                             cart.Amount = Amount;
                             cart.Data = DateTime.Now;
                             cart.BasePrice = autopart.Price;
-
+                            cart.Reference1 = Reference1;
+                            cart.Reference2 = Reference2;
 
                     if (ModelState.IsValid)
                             {
@@ -367,10 +370,10 @@ namespace AutoPartsWebSite.Controllers
         //}
         public RedirectToRouteResult AddToCart(int? PartId, int? Amount, string returnUrl)
         {
-            if ((PartId != null)  && (Amount != null))
-            {
-                AddToCartItem((int)PartId, (int)Amount);
-            }
+            //if ((PartId != null)  && (Amount != null))
+            //{
+            //    AddToCartItem((int)PartId, (int)Amount);
+            //}
             return RedirectToAction("Index", new { returnUrl });
 
         }
@@ -380,6 +383,9 @@ namespace AutoPartsWebSite.Controllers
 
             int PartId;
             int Amount;
+            string Reference1;
+            string Reference2;
+
             List<int> listValues = new List<int>();
             foreach (string key in Request.Form.AllKeys)
             {
@@ -387,9 +393,11 @@ namespace AutoPartsWebSite.Controllers
                 {
                     PartId = Convert.ToInt32(key.Remove(0, 6));
                     Amount = Convert.ToInt32(Request.Form[key]);
-                    if(Amount != 0) 
+                    Reference1 = Request.Form["Reference1" + PartId.ToString()];
+                    Reference2 = Request.Form["Reference2" + PartId.ToString()];
+                    if (Amount != 0) 
                     {
-                        AddToCartItem(PartId, Amount);
+                        AddToCartItem(PartId, Amount, Reference1, Reference2);
                     }
                 }
             }

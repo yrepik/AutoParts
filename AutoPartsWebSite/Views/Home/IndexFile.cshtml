@@ -1,0 +1,65 @@
+﻿@{
+    ViewBag.Title = "Поиск запчастей из файла";
+   
+}
+
+<DIV class="main-text">
+
+    <h2 id="cntr">ПОИСК ПО НОМЕРУ ЗАПЧАСТИ ИЗ ФАЙЛА</h2>
+
+    <div class="reg-form">
+        <br>
+        @using (Html.BeginForm("SearchFromFile", "Parts", null, FormMethod.Post, new { enctype = "multipart/form-data" }))
+        {
+            @Html.AntiForgeryToken()
+
+            <div class="form-horizontal">
+
+                @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+                <div class="form-group">
+                    <div class="col-md-10">
+                        <input type="file" placeholder="Имя файла" name="upload" id="upload_hidden" onchange="document.getElementById('upload_visible').value = this.value;" accept=".xlsx" />
+                        <input type="text" placeholder="Имя файла" readonly="1" id="upload_visible" onclick="document.getElementById('upload_hidden').click();" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+
+                    <div class="col-md-10">
+                        <input type="number" value="14" id="DeliveryTime" name="DeliveryTime" min="1" max="14" placeholder="Срок поставки" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-md-10">
+                        <label><input id="UseAmount" type="checkbox" value="true" checked name="UseAmount"> Кол-во из файла</label>
+                        <input type="hidden" value="false" name="UseAmount" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-md-10">
+                        <label><input id="UseReplacement" c type="checkbox" value="true" checked name="UseReplacement"> Искать с заменами</label>
+                        <input type="hidden" value="false" name="UseReplacement" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-md-offset-2 col-md-10">
+                        <input type="submit" value="НАЙТИ" />
+                    </div>
+                </div>
+            </div>
+        }
+        @ViewBag.Message
+    </div>
+</DIV>
+
+
+
+
+
+
+
+

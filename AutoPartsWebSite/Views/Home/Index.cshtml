@@ -21,8 +21,15 @@
             @Html.TextArea("autopartNumbers", new { rows = maxSearchRowsCount, columns = 60, placeholder="КОД ЗАПЧАСТИ" })
             @*@Html.Hidden("maxItemCount", maxSearchItemCount)*@
           
-<input type="submit" name="" value="НАЙТИ" class="but" />
-}
+            <input type="submit" name="" value="НАЙТИ" class="but" />
+        }
+        @ViewBag.Message
+        <br>
+        @if (Request.IsAuthenticated && User.IsInRole("RegistredUser"))
+        {
+            @Html.ActionLink("Поиск запчастей из файла", "IndexFile", "Home")
+        }
+        
 	</DIV>
 
 
@@ -31,7 +38,7 @@
 </p>*@
 
 	</DIV>
-@ViewBag.Message
+
 
 
 
