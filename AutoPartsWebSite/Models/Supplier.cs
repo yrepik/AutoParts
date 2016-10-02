@@ -5,6 +5,7 @@
     using System.ComponentModel.DataAnnotations;
     using System.ComponentModel.DataAnnotations.Schema;
     using System.Data.Entity.Spatial;
+    using System.Web.Mvc;
 
     [Table("Supplier")]
     public partial class Supplier
@@ -41,6 +42,32 @@
                 }
                 return importTemplate.Name.ToString();
             }
+        }
+
+        [Display(Name = "Тип")]
+        public int TypeId { get; set; }
+        [Display(Name = "Тип")]
+        public string Type {
+            get
+            {                
+                return getTypes().Find(x => x.Value.Equals(TypeId.ToString())).Text;
+            }
+        }
+        public List<SelectListItem> getTypes()
+        {
+            List<SelectListItem> StateItems = new List<SelectListItem>();
+            StateItems.Add(new SelectListItem
+            {
+                Text = " Стандартный",
+                Value = "1"
+            });
+            StateItems.Add(new SelectListItem
+            {
+                Text = "Скрытый",
+                Value = "2",
+                Selected = true
+            });           
+            return StateItems;
         }
     }
 }

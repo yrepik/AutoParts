@@ -41,6 +41,8 @@ namespace AutoPartsWebSite.Controllers
         {
             ViewBag.ImportTemplatesList = from importTemplate in db.ImportTemplates
                                           select new SelectListItem { Text = importTemplate.Name, Value = importTemplate.Id.ToString() };
+            ViewBag.TypesList = db.Suppliers.FirstOrDefault().getTypes();
+
             return View();
         }
 
@@ -49,10 +51,11 @@ namespace AutoPartsWebSite.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "Id,Name,Code,Rate,DeliveryTime,ImportTemplateId")] Supplier supplier)
+        public ActionResult Create([Bind(Include = "Id,Name,Code,Rate,DeliveryTime,TypeId,ImportTemplateId")] Supplier supplier)
         {
             ViewBag.ImportTemplatesList = from importTemplate in db.ImportTemplates
                                           select new SelectListItem { Text = importTemplate.Name, Value = importTemplate.Id.ToString() };
+            ViewBag.TypesList = db.Suppliers.FirstOrDefault().getTypes();
             if (ModelState.IsValid)
             {
                 db.Suppliers.Add(supplier);
@@ -77,6 +80,7 @@ namespace AutoPartsWebSite.Controllers
             }
             ViewBag.ImportTemplatesList = from importTemplate in db.ImportTemplates
                                           select new SelectListItem { Text = importTemplate.Name, Value = importTemplate.Id.ToString() };
+            ViewBag.TypesList = db.Suppliers.FirstOrDefault().getTypes();
             return View(supplier);
         }
 
@@ -85,10 +89,11 @@ namespace AutoPartsWebSite.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "Id,Name,Code,Rate,DeliveryTime,ImportTemplateId")] Supplier supplier)
+        public ActionResult Edit([Bind(Include = "Id,Name,Code,Rate,DeliveryTime,TypeId, ImportTemplateId")] Supplier supplier)
         {
             ViewBag.ImportTemplatesList = from importTemplate in db.ImportTemplates
                                           select new SelectListItem { Text = importTemplate.Name, Value = importTemplate.Id.ToString() };
+            //ViewBag.TypesList = db.Suppliers.FirstOrDefault().getTypes();
             if (ModelState.IsValid)
             {
                 db.Entry(supplier).State = EntityState.Modified;

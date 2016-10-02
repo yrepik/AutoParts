@@ -38,6 +38,7 @@
 
                 @Html.ValidationSummary(true, "", new { @class = "text-danger" })
                 <div class="form-group">
+                    @Html.Label("Имя файла", htmlAttributes: new { @class = "control-label col-md-2" })
                     <div class="col-md-10">
                         <input type="file" placeholder="Имя файла" name="upload" id="upload_hidden" onchange="document.getElementById('upload_visible').value = this.value;" accept=".xlsx" />
                         <input type="text"  placeholder="Имя файла" readonly="1" id="upload_visible" onclick="document.getElementById('upload_hidden').click();" />
@@ -45,6 +46,7 @@
                 </div>
 
                 <div class="form-group">
+                    @Html.Label("Срок поставки", htmlAttributes: new { @class = "control-label col-md-2" })
                     <div class="col-md-10">
                         <input type="number" value="@ViewBag.DeliveryTime" id="DeliveryTime" name="DeliveryTime" min="1" max="14" placeholder="Срок поставки" />
                     </div>
