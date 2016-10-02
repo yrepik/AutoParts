@@ -17,8 +17,7 @@ namespace AutoPartsWebSite.Models
         public virtual DbSet<PartReplacement> PartReplacement { get; set; }
         public virtual DbSet<Supplier> Suppliers { get; set; }
         public virtual DbSet<Rate> Rates { get; set; }
-
-        //public virtual DbSet<Cart> Carts { get; set; }
+        public virtual DbSet<Cart> Carts { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {

@@ -282,20 +282,10 @@ namespace AutoPartsWebSite.Controllers
 
         }
 
-        class SearchFileResult
-        {
-            // Auto-implemented properties.
-            public string Number { get; set; }
-            public string Brand { get; set; }
-            public string Amount { get; set; }
-            public string Reference1 { get; set; }
-            public string Reference2 { get; set; }
-
-        }
-
         //[Authorize(Roles = "RegistredUser")]
         public ActionResult SearchFromFile(int? DeliveryTime, bool? UseReplacement, bool? UseAmount, HttpPostedFileBase upload)
         {
+            // -------------------------- begin find search criteria   ----------------------------------------
             // list for search creterias
             List<SearchFileCriteria> SearchFileCriterias = new List<SearchFileCriteria> { };
 
@@ -331,6 +321,7 @@ namespace AutoPartsWebSite.Controllers
                 TempData["shortMessage"] = "Ошибка в файле поиска:" + ex.Message.ToString();
                 return RedirectToAction("IndexFile", "Home");
             }
+            // --------------------------  end find search criteria   ----------------------------------------
 
             string autopartNumbers = "";
             //copy part numbers to array
@@ -379,7 +370,8 @@ namespace AutoPartsWebSite.Controllers
                 var autoparts = (from p in db.Parts
                                  join a in db.PartAliases on p.Number equals a.Number into ps
                                  from a in ps.DefaultIfEmpty()
-                                 where autopartNumbersList.Contains(p.Number)
+                                 where  autopartNumbersList.Contains(p.Number)
+                                 //&& Convert.ToInt32(p.DeliveryTime) <= (int)DeliveryTime
                                  //select p
                                  select new
                                  {
@@ -426,6 +418,58 @@ namespace AutoPartsWebSite.Controllers
                     part.Quantity = CalcUserQuantity(part.Id);
                 }
 
+                // --------------------------  begin add to Cart   ----------------------------------------
+                
+                foreach (SearchFileCriteria sc in SearchFileCriterias)
+                {
+                    List<string> searchNumbers = new List<string> { sc.Number};
+
+                    // find and add replacement to numbers list
+                    if ((bool)UseReplacement)
+                    {
+                        var apr = (from r in db.PartReplacement
+                                   where r.Number.Contains(sc.Number)
+                                   select r.Replacement).ToList();
+                        searchNumbers.AddRange(apr);
+                    }
+                   
+                    var aps = from p in autoparts
+                              where searchNumbers.Contains(p.Number)
+                              select p;
+                    aps = aps.Where(p => p.Brand.Contains(sc.Brand));                 
+                    aps = aps.OrderBy(p => p.Price); // sort by price
+                    if (aps != null)
+                    {
+                        foreach (Part ap in aps)
+                        {
+                            if (!string.IsNullOrEmpty(ap.DeliveryTime)
+                                && !string.IsNullOrWhiteSpace(ap.DeliveryTime)
+                                && Convert.ToInt32(ap.DeliveryTime) <= (int)DeliveryTime)
+                            {
+                                if (!(bool)UseAmount)
+                                {
+                                    // add to cart and exit                          
+                                    AddCartItem(ap.Id, Convert.ToInt32(sc.Amount), sc.Reference1, sc.Reference2);
+                                    break;
+                                }
+                                if (Convert.ToInt32(ap.Quantity) >= Convert.ToInt32(sc.Amount))
+                                {
+                                    // add to cart and exit                          
+                                    AddCartItem(ap.Id, Convert.ToInt32(sc.Amount), sc.Reference1, sc.Reference2);
+                                    break;
+                                }
+                                else
+                                {
+                                    // add to cart and continue loop
+                                    AddCartItem(ap.Id, Convert.ToInt32(ap.Quantity), sc.Reference1, sc.Reference2);
+                                    sc.Amount = (Convert.ToInt32(sc.Amount) - Convert.ToInt32(ap.Quantity)).ToString();
+                                }
+                            }
+                        }
+                    }
+                }
+                // --------------------------  end add to Cart   ----------------------------------------
+
                 ViewBag.FileName = upload.FileName;
                 ViewBag.DeliveryTime = DeliveryTime;
                 ViewBag.UseReplacement = UseReplacement;
@@ -435,56 +479,102 @@ namespace AutoPartsWebSite.Controllers
                 Session["AutopartNumbersList"] = autopartNumbersList;
                 Session["AutopartSearchResult"] = autoparts;
 
-
-                var ac = (from p in autoparts
-                          join s in SearchFileCriterias on p.Number equals s.Number into ps
-                          from s in ps.DefaultIfEmpty()
-                          where Convert.ToInt32(p.DeliveryTime) <= Convert.ToInt32(DeliveryTime)
-                          select new
-                          {
-                              Id = p.Id,
-                              ImportId = p.ImportId,
-                              Brand = p.Brand,
-                              Number = p.Number,
-                              Name = p.Name,
-                              Details = p.Details,
-                              Size = p.Size,
-                              Weight = p.Weight,
-                              Quantity = p.Quantity,
-                              Price = p.Price,
-                              SupplierId = p.SupplierId
-                              //Supplier = p.Supplier,
-                              //DeliveryTime = p.DeliveryTime,                              
-                              //Amount = !string.IsNullOrEmpty(s.Amount) ? s.Amount : "0",
-                              //Reference1 = !string.IsNullOrEmpty(s.Reference1) ? s.Reference1 : "",
-                              //Reference2 = !string.IsNullOrEmpty(s.Reference2) ? s.Reference2 : ""
-                          }
-                                 ).ToList()                                 
-                             .Select(x => new Part
-                             {
-                                 Id = x.Id,
-                                 Brand = x.Brand,
-                                 Number = x.Number,
-                                 Name = x.Name,
-                                 Details = x.Details,
-                                 Size = x.Size,
-                                 Weight = x.Weight,
-                                 Quantity = x.Quantity,
-                                 Price = x.Price,
-                                 SupplierId = x.SupplierId
-                                 //Supplier = x.Supplier,
-                                 //DeliveryTime = x.DeliveryTime,
-                                 //Supplier = x.Supplier,
-                                 //Amount = Convert.ToInt32(x.Amount),
-                                 //Reference1 = x.Reference1,
-                                 //Reference2 = x.Reference2
-                             });
-
-                //ac.OrderByDescending(x => x.DeliveryTime);
-                ac.OrderBy(x => x.Size);
-
-                return View(ac);
+               
+                return RedirectToAction("Index","Carts");
             }
+        }
+
+        public void AddCartItem(int PartId, int Amount, string Reference1, string Reference2)
+        {
+            string currentUserId = User.Identity.GetUserId();
+            var userCart = (from s in db.Carts
+                            select s).Take(1000);
+            userCart = userCart.Where(s => s.UserId.Equals(currentUserId));
+
+            Part autopart = db.Parts.Find(PartId);
+            Cart cartpart = userCart.Where(s => s.PartId == PartId).FirstOrDefault();
+            if ((cartpart != null) && (autopart != null) && (Amount != 0))
+            {
+                if (Convert.ToInt32(cartpart.Quantity) >= (cartpart.Amount + Amount))
+                {
+                    cartpart.Amount = cartpart.Amount + Amount;
+                    cartpart.Reference1 = Reference1;
+                    cartpart.Reference2 = Reference2;
+                    if (ModelState.IsValid)
+                    {
+                        cartpart.Data = DateTime.Now;
+                        db.Entry(cartpart).State = EntityState.Modified;
+                        db.SaveChanges();
+                    }
+                }
+            }
+            else
+            {
+                if ((autopart != null) && (Amount != 0))
+                {
+                    Cart cart = new Cart();
+                    cart.PartId = autopart.Id;
+                    cart.UserId = User.Identity.GetUserId();
+
+                    cart.Brand = autopart.Brand;
+                    cart.Number = autopart.Number;
+                    cart.Name = autopart.Name;
+                    cart.Details = autopart.Details;
+                    cart.Size = autopart.Size;
+                    cart.Weight = autopart.Weight;
+                    cart.Quantity = autopart.Quantity;
+                    cart.Supplier = autopart.Supplier;
+                    cart.Price = CalcUserPrice(autopart.Id); // autopart.Price;
+                    cart.DeliveryTime = autopart.DeliveryTime;
+                    cart.Amount = Amount;
+                    cart.Data = DateTime.Now;
+                    cart.BasePrice = autopart.Price;
+                    cart.Reference1 = Reference1;
+                    cart.Reference2 = Reference2;
+
+                    if (ModelState.IsValid)
+                    {
+                        db.Carts.Add(cart);
+                        db.SaveChanges();
+                    }
+                }
+            }
+
+        }
+
+        private void FildPart(List<SearchFileCriteria> searchCriterias, List<Part> aParts)
+        {
+            CartsController cc = new CartsController { };
+            foreach (SearchFileCriteria sc in searchCriterias)
+            {               
+                var aps = from p in aParts
+                                where p.Number.Contains(sc.Number)
+                                select p;
+                aps = aps.OrderBy(p => p.Price); // sort by price
+                if (aps != null )
+                {
+                    foreach(Part ap in aps)
+                    {
+                        if (Convert.ToInt32(ap.Quantity) >= Convert.ToInt32(sc.Amount))
+                        {                            
+                            // add to cart and exit                          
+                            cc.AddToCartItem(ap.Id, Convert.ToInt32(sc.Amount), sc.Reference1, sc.Reference2);
+                            break;
+                        }
+                        else
+                        {
+                            // add to cart and continue loop
+                            cc.AddToCartItem(ap.Id, Convert.ToInt32(ap.Quantity), sc.Reference1, sc.Reference2);
+                            sc.Amount = (Convert.ToInt32(sc.Amount) - Convert.ToInt32(ap.Quantity)).ToString();
+                        }
+
+
+                    }
+                    
+                }
+            }
+
+            return ;
         }
 
         //private ActionResult SearchTEMP(string autopartNumbers) //, int? maxItemCount)
