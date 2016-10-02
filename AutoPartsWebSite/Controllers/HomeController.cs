@@ -32,6 +32,17 @@ namespace IdentityAutoPart.Controllers
             return View();
         }
 
+        [Authorize(Roles = "Admin")]
+        public ActionResult IndexFileAdmin()
+        {
+            if (TempData["shortMessage"] == null)
+            {
+                return View();
+            }
+            ViewBag.Message = TempData["shortMessage"].ToString();
+            return View();
+        }
+
         public ActionResult About()
         {
             ViewBag.Message = "Your app description page.";

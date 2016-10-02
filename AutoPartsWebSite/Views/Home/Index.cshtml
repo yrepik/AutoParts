@@ -28,6 +28,17 @@
         @if (Request.IsAuthenticated && User.IsInRole("RegistredUser"))
         {
             @Html.ActionLink("Поиск запчастей из файла", "IndexFile", "Home")
+            <br>
+            <a href="~/Content/files/ALFAPARTS-Search.xlsx">Шаблон</a>
+        }
+        @if (Request.IsAuthenticated && User.IsInRole("Admin"))
+        {
+            
+            <br>
+            @Html.ActionLink("Поиск запчастей из файла (Admin mode)", "IndexFileAdmin", "Home")
+            <br>
+            <a href="~/Content/files/ALFAPARTS-SearchAdmin.xlsx">Шаблон (admin)</a>
+
         }
         
 	</DIV>

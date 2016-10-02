@@ -157,6 +157,19 @@ namespace AutoPartsWebSite.Controllers
             return View(userCart.ToList());
         }
 
+        [Authorize(Roles = "Admin")]
+        public ActionResult IndexAdmin()
+        {
+            string currentUserId = User.Identity.GetUserId();
+            var userCart = (from s in db.Carts
+                            select s).Take(1000);
+            userCart = userCart.Where(s => s.UserId.Equals(currentUserId));
+            ViewBag.CartTotal = GetTotal();
+            ViewBag.CartCount = Convert.ToString(GetCount());
+
+            return View(userCart.ToList());
+        }
+
         // GET: Carts/Details/5
         public ActionResult Details(int? id)
         {

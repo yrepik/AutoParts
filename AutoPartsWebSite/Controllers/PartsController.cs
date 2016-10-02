@@ -213,12 +213,19 @@ namespace AutoPartsWebSite.Controllers
                 // create array from list
                 autopartNumbersList = numbersList.ToArray();
 
+                //get standard (not hidden) suppliers
+                var stdSuppliers = (from ss in db.Suppliers
+                                   where ss.TypeId == 1 // standard
+                                   select ss.Id).ToList();
+
                 // read about ".Select(x => new Part"  by link  
                 // http://stackoverflow.com/questions/5325797/the-entity-cannot-be-constructed-in-a-linq-to-entities-query
                 var autoparts = (from p in db.Parts
                                  join a in db.PartAliases on p.Number equals a.Number into ps
                                  from a in ps.DefaultIfEmpty()
-                                 where autopartNumbersList.Contains(p.Number)
+                                 where autopartNumbersList.Contains(p.Number) 
+                                    && stdSuppliers.Contains(p.SupplierId)
+                                    
                                  //select p
                                  select new 
                                  {
@@ -279,10 +286,9 @@ namespace AutoPartsWebSite.Controllers
             public string Amount { get; set; }
             public string Reference1 { get; set; }
             public string Reference2 { get; set; }
-
         }
 
-        //[Authorize(Roles = "RegistredUser")]
+        [Authorize(Roles = "RegistredUser")]
         public ActionResult SearchFromFile(int? DeliveryTime, bool? UseReplacement, bool? UseAmount, HttpPostedFileBase upload)
         {
             // -------------------------- begin find search criteria   ----------------------------------------
@@ -365,14 +371,19 @@ namespace AutoPartsWebSite.Controllers
                 // create array from list
                 autopartNumbersList = numbersList.ToArray();
 
+                //get suppliers for selection
+                var selSuppliers = (from ss in db.Suppliers
+                                    where ss.TypeId == 1 // standard
+                                    select ss.Id).ToList();
+
                 // read about ".Select(x => new Part"  by link  
                 // http://stackoverflow.com/questions/5325797/the-entity-cannot-be-constructed-in-a-linq-to-entities-query
                 var autoparts = (from p in db.Parts
                                  join a in db.PartAliases on p.Number equals a.Number into ps
                                  from a in ps.DefaultIfEmpty()
-                                 where  autopartNumbersList.Contains(p.Number)
-                                 //&& Convert.ToInt32(p.DeliveryTime) <= (int)DeliveryTime
-                                 //select p
+                                 where autopartNumbersList.Contains(p.Number)
+                                    && selSuppliers.Contains(p.SupplierId)
+
                                  select new
                                  {
                                      Id = p.Id,
@@ -484,7 +495,7 @@ namespace AutoPartsWebSite.Controllers
             }
         }
 
-        public void AddCartItem(int PartId, int Amount, string Reference1, string Reference2)
+        private void AddCartItem(int PartId, int Amount, string Reference1, string Reference2)
         {
             string currentUserId = User.Identity.GetUserId();
             var userCart = (from s in db.Carts
@@ -542,7 +553,292 @@ namespace AutoPartsWebSite.Controllers
 
         }
 
-        private void FildPart(List<SearchFileCriteria> searchCriterias, List<Part> aParts)
+        class SearchFileCriteriaAdmin
+        {
+            // Auto-implemented properties.
+            public string Number { get; set; }
+            public string Brand { get; set; }
+            public string Amount { get; set; }            
+            public string Reference1 { get; set; }
+            public string Reference2 { get; set; }
+            public string Price { get; set; }
+            public string Details { get; set; }
+        }
+
+        [Authorize(Roles = "Admin")]
+        public ActionResult SearchFromFileAdmin(int? DeliveryTime, bool? UseReplacement, bool? UseAmount, bool? UseHidden, HttpPostedFileBase upload)
+        {
+            // -------------------------- begin find search criteria   ----------------------------------------
+            // list for search creterias
+            List<SearchFileCriteriaAdmin> SearchFileCriterias = new List<SearchFileCriteriaAdmin> { };
+
+            //import files into search creterias list
+            int firstDataRow = 2;
+            try
+            {
+                if (upload != null && upload.ContentLength > 0)
+                {
+                    // load from stream
+                    using (ExcelPackage package = new ExcelPackage(upload.InputStream))
+                    {
+                        ExcelWorksheet worksheet = package.Workbook.Worksheets.FirstOrDefault();
+                        for (int i = firstDataRow; i <= worksheet.Dimension.End.Row; i++)
+                        {
+                            SearchFileCriteriaAdmin SearchFileCriteriaItem = new SearchFileCriteriaAdmin
+                            {
+                                Number = (worksheet.Cells["A" + i.ToString()].Value != null) ? worksheet.Cells["A" + i.ToString()].Value.ToString() : "",
+                                Brand = (worksheet.Cells["B" + i.ToString()].Value != null) ? worksheet.Cells["B" + i.ToString()].Value.ToString() : "",
+                                Amount = (worksheet.Cells["C" + i.ToString()].Value != null) ? worksheet.Cells["C" + i.ToString()].Value.ToString() : "",
+                                Reference1 = (worksheet.Cells["D" + i.ToString()].Value != null) ? worksheet.Cells["D" + i.ToString()].Value.ToString() : "",
+                                Reference2 = (worksheet.Cells["E" + i.ToString()].Value != null) ? worksheet.Cells["E" + i.ToString()].Value.ToString() : "",
+                                Price = (worksheet.Cells["F" + i.ToString()].Value != null) ? worksheet.Cells["F" + i.ToString()].Value.ToString() : "",
+                                Details = (worksheet.Cells["G" + i.ToString()].Value != null) ? worksheet.Cells["G" + i.ToString()].Value.ToString() : ""
+                            };
+                            SearchFileCriterias.Add(SearchFileCriteriaItem);
+                        }
+                    }
+                    // finish                    
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["shortMessage"] = "Ошибка в файле поиска:" + ex.Message.ToString();
+                return RedirectToAction("IndexFileAdmin", "Home");
+            }
+            // --------------------------  end find search criteria   ----------------------------------------
+
+            string autopartNumbers = "";
+            //copy part numbers to array
+            foreach (var searchCriteria in SearchFileCriterias)
+            {
+                autopartNumbers += searchCriteria.Number + ", ";
+            }
+
+            string[] autopartNumbersList = new string[] { };
+            int maxItemCount = GetSearchLimit(); // get info from db about curren user search limit
+            ViewBag.SearchLimit = maxItemCount;
+
+            if (String.IsNullOrEmpty(autopartNumbers))
+            {
+                TempData["shortMessage"] = "Данных не обнаружено, уточните запрос."; //"Тут рыбы нет !";
+                return RedirectToAction("IndexFileAdmin", "Home");
+            }
+            else
+            {
+                string[] delimiters = { Environment.NewLine, ".", ",", ";", " " }; //new Char[] { '\n', '\r' }
+                autopartNumbersList = autopartNumbers.Split(delimiters, StringSplitOptions.RemoveEmptyEntries); // StringSplitOptions.None
+
+                var numbersList = new List<string>(autopartNumbersList);
+
+                // two digits for search item message
+                ViewBag.SearchLimit = maxItemCount;
+                ViewBag.ItemsToSearch = numbersList.Count;
+
+                if (maxItemCount < numbersList.Count)
+                {
+                    numbersList.RemoveRange((int)maxItemCount, numbersList.Count() - (int)maxItemCount);
+                }
+                // find and add replacement to numbers list
+                if ((bool)UseReplacement)
+                {
+                    var autopartsReplacement = (from s in db.PartReplacement
+                                                where numbersList.Contains(s.Number)
+                                                select s.Replacement).ToList();
+                    numbersList.AddRange(autopartsReplacement);
+                }
+                // create array from list
+                autopartNumbersList = numbersList.ToArray();
+
+                //get suppliers for selection
+                var selSuppliers = (from ss in db.Suppliers
+                                        where ss.TypeId == 1 // standard
+                                        select ss.Id).ToList();
+                if ((bool)UseHidden)
+                {
+                    selSuppliers = (from ss in db.Suppliers
+                                    where ss.TypeId == 1 // standard
+                                        || ss.TypeId == 2 // Hidden
+                                    select ss.Id).ToList();
+                }
+
+                // read about ".Select(x => new Part"  by link  
+                // http://stackoverflow.com/questions/5325797/the-entity-cannot-be-constructed-in-a-linq-to-entities-query
+                var autoparts = (from p in db.Parts
+                                 join a in db.PartAliases on p.Number equals a.Number into ps
+                                 from a in ps.DefaultIfEmpty()
+                                 where autopartNumbersList.Contains(p.Number)
+                                    && selSuppliers.Contains(p.SupplierId)
+
+                                 select new
+                                 {
+                                     Id = p.Id,
+                                     ImportId = p.ImportId,
+                                     Brand = p.Brand,
+                                     Number = p.Number,
+                                     Name = !string.IsNullOrEmpty(a.Name) ? a.Name : p.Name,
+                                     Details = !string.IsNullOrEmpty(a.Details) ? a.Details : p.Details,
+                                     Size = !string.IsNullOrEmpty(a.Size) ? a.Size : p.Size,
+                                     Weight = !string.IsNullOrEmpty(a.Weight) ? a.Weight : p.Weight,
+                                     Quantity = p.Quantity,
+                                     Price = p.Price,
+                                     //Supplier = p.Supplier,
+                                     //DeliveryTime = p.DeliveryTime,
+                                     SupplierId = p.SupplierId
+                                 }
+                                 ).ToList()
+                                 .Select(x => new Part
+                                 {
+                                     Id = x.Id,
+                                     ImportId = x.ImportId,
+                                     Brand = x.Brand,
+                                     Number = x.Number,
+                                     Name = x.Name,
+                                     Details = x.Details,
+                                     Size = x.Size,
+                                     Weight = x.Weight,
+                                     Quantity = x.Quantity,
+                                     Price = x.Price,
+                                     //Supplier = x.Supplier,
+                                     //DeliveryTime = x.DeliveryTime,
+                                     SupplierId = x.SupplierId
+                                 }).Take(1000);
+                if (autoparts.Count() <= 0) // not found any numbers
+                {
+                    TempData["shortMessage"] = "Данных не обнаружено, уточните запрос."; //"Тут рыбы нет !";
+                    return RedirectToAction("IndexFileAdmin", "Home");
+                }
+
+                foreach (Part part in autoparts)
+                {
+                    part.Price = CalcUserPrice(part.Id);
+                    part.Quantity = CalcUserQuantity(part.Id);
+                }
+
+                // --------------------------  begin add to Cart   ----------------------------------------
+
+                foreach (SearchFileCriteriaAdmin sc in SearchFileCriterias)
+                {
+                    List<string> searchNumbers = new List<string> { sc.Number };
+
+                    // find and add replacement to numbers list
+                    if ((bool)UseReplacement)
+                    {
+                        var apr = (from r in db.PartReplacement
+                                   where r.Number.Contains(sc.Number)
+                                   select r.Replacement).ToList();
+                        searchNumbers.AddRange(apr);
+                    }
+
+                    var aps = from p in autoparts
+                              where searchNumbers.Contains(p.Number)
+                              select p;
+                    aps = aps.Where(p => p.Brand.Contains(sc.Brand));
+                    aps = aps.OrderBy(p => p.Price); // sort by price
+                    if (aps != null)
+                    {
+                        foreach (Part ap in aps)
+                        {
+                            if (!string.IsNullOrEmpty(ap.DeliveryTime)
+                                && !string.IsNullOrWhiteSpace(ap.DeliveryTime)
+                                && Convert.ToInt32(ap.DeliveryTime) <= (int)DeliveryTime)
+                            {
+                                if (!(bool)UseAmount)
+                                {
+                                    // add to cart and exit                          
+                                    AddCartItemAdmin(ap.Id, Convert.ToInt32(sc.Amount), sc.Reference1, sc.Reference2, sc.Price, sc.Details);
+                                    break;
+                                }
+                                if (Convert.ToInt32(ap.Quantity) >= Convert.ToInt32(sc.Amount))
+                                {
+                                    // add to cart and exit                          
+                                    AddCartItemAdmin(ap.Id, Convert.ToInt32(sc.Amount), sc.Reference1, sc.Reference2, sc.Price, sc.Details);
+                                    break;
+                                }
+                                else
+                                {
+                                    // add to cart and continue loop
+                                    AddCartItemAdmin(ap.Id, Convert.ToInt32(ap.Quantity), sc.Reference1, sc.Reference2, sc.Price, sc.Details);
+                                    sc.Amount = (Convert.ToInt32(sc.Amount) - Convert.ToInt32(ap.Quantity)).ToString();
+                                }
+                            }
+                        }
+                    }
+                }
+                // --------------------------  end add to Cart   ----------------------------------------
+
+                ViewBag.FileName = upload.FileName;
+                ViewBag.DeliveryTime = DeliveryTime;
+                ViewBag.UseReplacement = UseReplacement;
+                ViewBag.UseAmount = UseAmount;
+
+
+                Session["AutopartNumbersList"] = autopartNumbersList;
+                Session["AutopartSearchResult"] = autoparts;
+
+
+                return RedirectToAction("IndexAdmin", "Carts");
+            }
+        }
+
+        private void AddCartItemAdmin(int PartId, int Amount, string Reference1, string Reference2, string Price, string Details)
+        {
+            string currentUserId = User.Identity.GetUserId();
+            var userCart = (from s in db.Carts
+                            select s).Take(1000);
+            userCart = userCart.Where(s => s.UserId.Equals(currentUserId));
+
+            Part autopart = db.Parts.Find(PartId);
+            Cart cartpart = userCart.Where(s => s.PartId == PartId).FirstOrDefault();
+            if ((cartpart != null) && (autopart != null) && (Amount != 0))
+            {
+                if (Convert.ToInt32(cartpart.Quantity) >= (cartpart.Amount + Amount))
+                {
+                    cartpart.Amount = cartpart.Amount + Amount;
+                    cartpart.Reference1 = Reference1;
+                    cartpart.Reference2 = Reference2;
+                    if (ModelState.IsValid)
+                    {
+                        cartpart.Data = DateTime.Now;
+                        db.Entry(cartpart).State = EntityState.Modified;
+                        db.SaveChanges();
+                    }
+                }
+            }
+            else
+            {
+                if ((autopart != null) && (Amount != 0))
+                {
+                    Cart cart = new Cart();
+                    cart.PartId = autopart.Id;
+                    cart.UserId = User.Identity.GetUserId();
+
+                    cart.Brand = autopart.Brand;
+                    cart.Number = autopart.Number;
+                    cart.Name = autopart.Name;
+                    cart.Details = !string.IsNullOrEmpty(Details) ? Details : autopart.Details;
+                    cart.Size = autopart.Size;
+                    cart.Weight = autopart.Weight;
+                    cart.Quantity = autopart.Quantity;
+                    cart.Supplier = autopart.Supplier;
+                    cart.Price = !string.IsNullOrEmpty(Price) ? Price: CalcUserPrice(autopart.Id); // autopart.Price;
+                    cart.DeliveryTime = autopart.DeliveryTime;
+                    cart.Amount = Amount;
+                    cart.Data = DateTime.Now;
+                    cart.BasePrice = autopart.Price;
+                    cart.Reference1 = Reference1;
+                    cart.Reference2 = Reference2;
+
+                    if (ModelState.IsValid)
+                    {
+                        db.Carts.Add(cart);
+                        db.SaveChanges();
+                    }
+                }
+            }
+
+        }
+
+        private void FindPart(List<SearchFileCriteria> searchCriterias, List<Part> aParts)
         {
             CartsController cc = new CartsController { };
             foreach (SearchFileCriteria sc in searchCriterias)
