@@ -41,7 +41,26 @@ namespace AutoPartsWebSite.Controllers
         {
             ViewBag.ImportTemplatesList = from importTemplate in db.ImportTemplates
                                           select new SelectListItem { Text = importTemplate.Name, Value = importTemplate.Id.ToString() };
-            ViewBag.TypesList = db.Suppliers.FirstOrDefault().getTypes();
+            if (db.Suppliers.FirstOrDefault() != null)
+            {
+                ViewBag.TypesList = db.Suppliers.FirstOrDefault().getTypes();
+            }
+            else
+            {
+                List<SelectListItem> TypeItems = new List<SelectListItem>();
+                TypeItems.Add(new SelectListItem
+                {
+                    Text = " Стандартный",
+                    Value = "1"
+                });
+                TypeItems.Add(new SelectListItem
+                {
+                    Text = "Скрытый",
+                    Value = "2",
+                    Selected = true
+                });
+                ViewBag.TypesList = TypeItems;
+            }
 
             return View();
         }
@@ -55,14 +74,14 @@ namespace AutoPartsWebSite.Controllers
         {
             ViewBag.ImportTemplatesList = from importTemplate in db.ImportTemplates
                                           select new SelectListItem { Text = importTemplate.Name, Value = importTemplate.Id.ToString() };
-            ViewBag.TypesList = db.Suppliers.FirstOrDefault().getTypes();
+            
             if (ModelState.IsValid)
             {
                 db.Suppliers.Add(supplier);
                 db.SaveChanges();
                 return RedirectToAction("Index");
             }
-
+            ViewBag.TypesList = db.Suppliers.FirstOrDefault().getTypes();
             return View(supplier);
         }
 
