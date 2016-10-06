@@ -249,9 +249,12 @@ namespace AutoPartsWebSite.Controllers
                         dicPart.Add("Quantity", Convert.ToString(worksheet.Cells[importTemplate.QuantityColumn + i.ToString()].Value));   //  Quantity = 10
                         dicPart.Add("Price", Convert.ToString(worksheet.Cells[importTemplate.PriceColumn + i.ToString()].Value));   //  Price = 8                        
                         dicPart.Add("SupplierId", Convert.ToString(supplierId));   //  SupplierId = 7                        
-                
-                        AddPartData(ref dicPart);
-                        linesNumber++;
+
+                        if (!string.IsNullOrEmpty(dicPart["Quantity"].Trim())) 
+                        {
+                            AddPartData(ref dicPart);
+                            linesNumber++;
+                        }
                     }
                 }
                 ViewBag.Message = "Импорт завершен.";
@@ -283,9 +286,8 @@ namespace AutoPartsWebSite.Controllers
                     Price = dicPartData["Price"],
                     SupplierId = Convert.ToInt32(dicPartData["SupplierId"])
                 };
-
                 db_Parts.Parts.Add(autopart);
-                db_Parts.SaveChanges();
+                db_Parts.SaveChanges();                               
             }
         }
 
