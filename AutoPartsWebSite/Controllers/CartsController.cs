@@ -94,7 +94,7 @@ namespace AutoPartsWebSite.Controllers
                             select s).Take(1000);
             userCart = userCart.Where(s => s.UserId.Equals(currentUserId));
             return Convert.ToDecimal(userCart.ToList().Sum(x => x.Total));
-        }
+        }       
 
         public decimal GetUserBalans()
         {
@@ -265,6 +265,20 @@ namespace AutoPartsWebSite.Controllers
             Cart cart = db.Carts.Find(id);
             db.Carts.Remove(cart);
             db.SaveChanges();
+            return RedirectToAction("Index");
+        }
+               
+        public ActionResult DeleteUserCart()
+        {
+            string currentUserId = User.Identity.GetUserId();
+            var userCart = from c in db.Carts
+                           where c.UserId.Equals(currentUserId)
+                           select c;
+            if (userCart != null)
+            {
+                db.Carts.RemoveRange(userCart);                
+                db.SaveChanges();
+            }            
             return RedirectToAction("Index");
         }
 

@@ -12,6 +12,7 @@ a:hover {color:#e50040; text-decoration: none; }
 #red{color:#e50040;}
 #cntr{text-align:center;}
 #lft{text-align:left;}
+#riht{text-align:right;}
 #ol50{margin-left: 50px;}
 
 .clearfix {display: block;}

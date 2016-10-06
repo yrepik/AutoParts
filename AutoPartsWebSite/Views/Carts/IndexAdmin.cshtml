@@ -131,6 +131,9 @@
     </tfoot>
 </table>
 
+<div id="riht">
+    @Html.ActionLink("Очистить корзину", "DeleteUserCart", routeValues: null, htmlAttributes: new { @class = "btn btn-success alink1" })
+</div>
 @if (((AutoPartsWebSite.Controllers.CartsController)this.ViewContext.Controller).PositiveUserCartBalans() && (Model.Count() > 0))
 {
     <div id="cntr">
