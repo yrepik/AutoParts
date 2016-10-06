@@ -145,7 +145,7 @@
         if (Request.IsAuthenticated && User.IsInRole("RegistredUser"))
         {
             <tr class="trCart">
-                <td id="white" colspan="10">
+                <td id="white" colspan="12">
                     @Html.Hidden("returnUrl", Request.Url.PathAndQuery)
                     <input type="submit" id="cntr" class="btn btn-success but" value="ДОБАВИТЬ В КОРЗИНУ" />
                 </td>
