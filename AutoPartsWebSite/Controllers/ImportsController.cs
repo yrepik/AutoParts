@@ -252,8 +252,11 @@ namespace AutoPartsWebSite.Controllers
 
                         if (!string.IsNullOrEmpty(dicPart["Quantity"].Trim())) 
                         {
-                            AddPartData(ref dicPart);
-                            linesNumber++;
+                            if (dicPart["Quantity"].Trim() != "0")
+                            {
+                                AddPartData(ref dicPart);
+                                linesNumber++;
+                            }
                         }
                     }
                 }
