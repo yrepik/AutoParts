@@ -265,16 +265,19 @@ namespace AutoPartsWebSite.Controllers
                     TempData["shortMessage"] = "Данных не обнаружено, уточните запрос."; //"Тут рыбы нет !";
                     return RedirectToAction("Index", "Home");
                 }
-                    
+
+                List<Part> aparts = new List<Part> { };
                 foreach (Part part in autoparts)
                 {
                     part.Price = CalcUserPrice(part.Id);
                     part.Quantity = CalcUserQuantity(part.Id);
+                    aparts.Add(part);
                 }
+                autoparts = aparts;
 
                 Session["AutopartNumbersList"] = autopartNumbersList;
                 Session["AutopartSearchResult"] = autoparts;
-                return View(autoparts);
+                return View((IEnumerable<Part>)autoparts);
             }
         }
 
