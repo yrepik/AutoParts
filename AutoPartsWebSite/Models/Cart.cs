@@ -71,5 +71,5 @@
         [Display(Name = "Ref2")]
         [StringLength(10)]
         public string Reference2 { get; set; }
-    }
+    }    
 }

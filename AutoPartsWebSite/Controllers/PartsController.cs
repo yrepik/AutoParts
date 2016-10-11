@@ -290,13 +290,26 @@ namespace AutoPartsWebSite.Controllers
             public string Reference1 { get; set; }
             public string Reference2 { get; set; }
         }
-
+                
         [Authorize(Roles = "RegistredUser")]
         public ActionResult SearchFromFile(int? DeliveryTime, bool? UseReplacement, bool? UseAmount, HttpPostedFileBase upload)
         {
             // -------------------------- begin find search criteria   ----------------------------------------
             // list for search creterias
             List<SearchFileCriteria> SearchFileCriterias = new List<SearchFileCriteria> { };
+
+            string uploadFileName = "";
+            // take search creteria from session
+            if (upload == null && Session["SearchFileCriterias"] != null)
+            {
+                
+                List<SearchFileCriteria> sessionSearch = (List<SearchFileCriteria>)Session["SearchFileCriterias"];
+                if (sessionSearch.Count() > 0)
+                {
+                    SearchFileCriterias = sessionSearch;
+                    uploadFileName = (string)Session["uploadFileName"];
+                }
+            }
 
             //import files into search creterias list
             int firstDataRow = 2;
@@ -322,7 +335,10 @@ namespace AutoPartsWebSite.Controllers
                             SearchFileCriterias.Add(SearchFileCriteriaItem);
                         }
                     }
-                    // finish                    
+                    // finish    
+                    uploadFileName = upload.FileName;
+                    Session["SearchFileCriterias"] = SearchFileCriterias;
+                    Session["uploadFileName"] = uploadFileName;
                 }                
             }
             catch (Exception ex)
@@ -433,7 +449,9 @@ namespace AutoPartsWebSite.Controllers
                 }
 
                 // --------------------------  begin add to Cart   ----------------------------------------
-                
+                // create new preCart for display items before add them to card
+                List<Cart> preCart = new List<Cart> { };
+
                 foreach (SearchFileCriteria sc in SearchFileCriterias)
                 {
                     List<string> searchNumbers = new List<string> { sc.Number};
@@ -445,8 +463,8 @@ namespace AutoPartsWebSite.Controllers
                                    where r.Number.Contains(sc.Number)
                                    select r.Replacement).ToList();
                         searchNumbers.AddRange(apr);
-                    }
-                   
+                    }                    
+
                     var aps = from p in autoparts
                               where searchNumbers.Contains(p.Number)
                               select p;
@@ -463,19 +481,28 @@ namespace AutoPartsWebSite.Controllers
                                 if (!(bool)UseAmount)
                                 {
                                     // add to cart and exit                          
-                                    AddCartItem(ap.Id, Convert.ToInt32(sc.Amount), sc.Reference1, sc.Reference2);
+                                    //AddCartItem(ap.Id, Convert.ToInt32(sc.Amount), sc.Reference1, sc.Reference2);
+
+                                    // add to precart and exit
+                                    preCart.Add(NewPreCartItem(ap.Id, Convert.ToInt32(sc.Amount), sc.Reference1, sc.Reference2));
                                     break;
                                 }
                                 if (Convert.ToInt32(ap.Quantity) >= Convert.ToInt32(sc.Amount))
                                 {
                                     // add to cart and exit                          
-                                    AddCartItem(ap.Id, Convert.ToInt32(sc.Amount), sc.Reference1, sc.Reference2);
+                                    //AddCartItem(ap.Id, Convert.ToInt32(sc.Amount), sc.Reference1, sc.Reference2);
+
+                                    // add to precart and exit
+                                    preCart.Add(NewPreCartItem(ap.Id, Convert.ToInt32(sc.Amount), sc.Reference1, sc.Reference2));
                                     break;
                                 }
                                 else
                                 {
                                     // add to cart and continue loop
-                                    AddCartItem(ap.Id, Convert.ToInt32(ap.Quantity), sc.Reference1, sc.Reference2);
+                                    //AddCartItem(ap.Id, Convert.ToInt32(ap.Quantity), sc.Reference1, sc.Reference2);
+
+                                    // add to precart and continue loop
+                                    preCart.Add(NewPreCartItem(ap.Id, Convert.ToInt32(sc.Amount), sc.Reference1, sc.Reference2));
                                     sc.Amount = (Convert.ToInt32(sc.Amount) - Convert.ToInt32(ap.Quantity)).ToString();
                                 }
                             }
@@ -484,18 +511,49 @@ namespace AutoPartsWebSite.Controllers
                 }
                 // --------------------------  end add to Cart   ----------------------------------------
 
-                ViewBag.FileName = upload.FileName;
+                ViewBag.FileName = uploadFileName;
                 ViewBag.DeliveryTime = DeliveryTime;
                 ViewBag.UseReplacement = UseReplacement;
                 ViewBag.UseAmount = UseAmount;
 
-
                 Session["AutopartNumbersList"] = autopartNumbersList;
-                Session["AutopartSearchResult"] = autoparts;
+                Session["AutopartSearchResult"] = preCart;
 
-               
-                return RedirectToAction("Index","Carts");
+                // return RedirectToAction("Index","Carts");
+                return View((IEnumerable<Cart>)preCart);
             }
+        }
+
+        private Cart NewPreCartItem(int PartId, int Amount, string Reference1, string Reference2)
+        {
+            string currentUserId = User.Identity.GetUserId();
+            var userCart = (from s in db.Carts
+                            select s).Take(1000);
+            userCart = userCart.Where(s => s.UserId.Equals(currentUserId));
+
+            Part autopart = db.Parts.Find(PartId);
+            Cart cart = new Cart();
+            if ((autopart != null) && (Amount != 0))
+            {
+                cart.PartId = autopart.Id;
+                cart.UserId = User.Identity.GetUserId();
+                cart.Brand = autopart.Brand;
+                cart.Number = autopart.Number;
+                cart.Name = autopart.Name;
+                cart.Details = autopart.Details;
+                cart.Size = autopart.Size;
+                cart.Weight = autopart.Weight;
+                cart.Quantity = autopart.Quantity;
+                cart.Supplier = autopart.Supplier;
+                cart.Price = CalcUserPrice(autopart.Id); // autopart.Price;
+                cart.DeliveryTime = autopart.DeliveryTime;
+                cart.Amount = Amount;
+                cart.Data = DateTime.Now;
+                cart.BasePrice = autopart.Price;
+                cart.Reference1 = Reference1;
+                cart.Reference2 = Reference2;
+            }
+            return cart;
         }
 
         private void AddCartItem(int PartId, int Amount, string Reference1, string Reference2)
@@ -555,6 +613,8 @@ namespace AutoPartsWebSite.Controllers
             }
 
         }
+
+       
 
         class SearchFileCriteriaAdmin
         {

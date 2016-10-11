@@ -419,12 +419,15 @@ namespace AutoPartsWebSite.Controllers
                 if (key.StartsWith("Amount"))
                 {
                     PartId = Convert.ToInt32(key.Remove(0, 6));
-                    Amount = Convert.ToInt32(Request.Form[key]);
-                    Reference1 = Request.Form["Reference1" + PartId.ToString()];
-                    Reference2 = Request.Form["Reference2" + PartId.ToString()];
-                    if (Amount != 0) 
+                    if (PartId != 0)
                     {
-                        AddToCartItem(PartId, Amount, Reference1, Reference2);
+                        Amount = Convert.ToInt32(Request.Form[key]);
+                        Reference1 = Request.Form["Reference1" + PartId.ToString()];
+                        Reference2 = Request.Form["Reference2" + PartId.ToString()];
+                        if (Amount != 0)
+                        {
+                            AddToCartItem(PartId, Amount, Reference1, Reference2);
+                        }
                     }
                 }
             }

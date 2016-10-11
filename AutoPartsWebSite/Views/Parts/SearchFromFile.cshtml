@@ -1,4 +1,4 @@
-﻿﻿@model IEnumerable<AutoPartsWebSite.Models.Part>
+﻿﻿@model IEnumerable<AutoPartsWebSite.Models.Cart>
 
 
 @{
@@ -38,10 +38,10 @@
 
                 @Html.ValidationSummary(true, "", new { @class = "text-danger" })
                 <div class="form-group">
-                    @Html.Label("Имя файла", htmlAttributes: new { @class = "control-label col-md-2" })
+                    @Html.Label("Имя файла ", htmlAttributes: new { @class = "control-label col-md-2" }) @ViewBag.FileName
                     <div class="col-md-10">
                         <input type="file" placeholder="Имя файла" name="upload" id="upload_hidden" onchange="document.getElementById('upload_visible').value = this.value;" accept=".xlsx" />
-                        <input type="text"  placeholder="Имя файла" readonly="1" id="upload_visible" onclick="document.getElementById('upload_hidden').click();" />
+                        <input type="text"  placeholder="Имя файла" readonly="1" id="upload_visible" onclick="document.getElementById('upload_hidden').click();" />                        
                     </div>
                 </div>
 
@@ -54,15 +54,19 @@
 
                 <div class="form-group">
                     <div class="col-md-10">
-                        <label><input id="UseAmount" type="checkbox" value="true" name="UseAmount" @(ViewBag.UseAmount ? "checked=\"checked\"" : "")> Кол-во из файла @ViewBag.UseAmount </label>
-                        <input type="hidden" value="false" name="UseAmount" @(ViewBag.UseAmount ? "checked=\"checked\"" : "") />
+                        <label>
+                            @Html.CheckBox("UseAmount", true)
+                            Кол-во из файла
+                        </label>                        
                     </div>
                 </div>
 
                 <div class="form-group">
                     <div class="col-md-10">
-                        <label><input id="UseReplacement" type="checkbox" value="true" checked name="UseReplacement" @(ViewBag.UseReplacement ? "checked=\"checked\"" : "")> Искать с заменами @ViewBag.UseReplacement </label>
-                        <input type="hidden" value="false" name="UseReplacement" @(ViewBag.UseReplacement ? "checked=\"checked\"" : "")/>
+                        <label>
+                            @Html.CheckBox("UseReplacement", true)
+                            Искать с заменами
+                        </label>
                     </div>
                 </div>
 
@@ -126,8 +130,11 @@
                 @Html.DisplayName("Ref1")
             </th>
             <th>
-                @Html.DisplayName("Ref1")
+                @Html.DisplayName("Ref2")
             </th>
+            @*<th>
+                @Html.DisplayName("Стоимость")
+            </th>*@
         }
     </tr>
 
@@ -167,34 +174,53 @@
                 @if (Request.IsAuthenticated && User.IsInRole("RegistredUser"))
                 {
                     <td>
-                        @Html.TextBox("Amount" + item.Id, "0", new { PartId = item.Id, type = "number", min = "0", max = item.Quantity })
+                        @Html.TextBox("Amount" + item.PartId, item.Amount, new { PartId = item.PartId, type = "number", min = "0", max = item.Quantity })
                         @*@Html.DisplayFor(modelItem => item.Amount)*@   
                     </td>
                     <td>
-                        @Html.TextBox("Reference1" + item.Id, "", new { PartId = item.Id })
+                        @Html.TextBox("Reference1" + item.PartId, item.Reference1, new { PartId = item.PartId })
                     </td>
                     <td>
-                        @Html.TextBox("Reference2" + item.Id, "", new { PartId = item.Id })
+                        @Html.TextBox("Reference2" + item.PartId, item.Reference2, new { PartId = item.PartId })
                     </td>
+                    @*<td>
+                        @Html.DisplayFor(modelItem => item.Total)
+                    </td>*@
                 }
-
             </tr>
         }
-
-        if (Request.IsAuthenticated && User.IsInRole("RegistredUser"))
-        {
+        <tfoot align="left" style="background: #fc0">
+            @*<tr>
+                <td colspan="11"></td>
+                <td>                    
+                    Всего деталей: @Model.Sum(x => x.Amount)
+                </td>
+                <td>                    
+                    Общая сумма:<br><span id="red">
+                        @{  decimal preCartSum = Convert.ToDecimal(Model.Sum(x => x.Total));}
+                        @preCartSum.ToString("N")
+                        USD
+                    </span>
+                </td>
+            </tr>*@
             <tr class="trCart">
-                <td id="white" colspan="10">
+                <td id="white" colspan="14">
                     @Html.Hidden("returnUrl", Request.Url.PathAndQuery)
                     <input type="submit" id="cntr" class="btn btn-success but" value="ДОБАВИТЬ В КОРЗИНУ" />
                 </td>
             </tr>
-        }
+        </tfoot>
     }
 </table>
-
-<div id="cntr">
-    <br>
-    @Html.ActionLink("Экспорт результатов в Excel", "Excel")
-</div>
-<br>
+    @*if (Request.IsAuthenticated && User.IsInRole("RegistredUser"))
+    {
+    <div id="cntr">
+        @Html.Hidden("returnUrl", Request.Url.PathAndQuery)
+        <input type="submit" id="cntr" class="btn btn-success but" value="ДОБАВИТЬ В КОРЗИНУ" />
+    </div>
+    }
+    <div id="cntr">
+        <br>
+        @Html.ActionLink("Экспорт результатов в Excel", "Excel")
+    </div>
+    <br>*@
