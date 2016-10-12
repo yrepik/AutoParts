@@ -336,8 +336,9 @@ namespace AutoPartsWebSite.Controllers
                         }
                     }
                     // finish    
-                    uploadFileName = upload.FileName;
+
                     Session["SearchFileCriterias"] = SearchFileCriterias;
+                    uploadFileName = upload.FileName;                    
                     Session["uploadFileName"] = uploadFileName;
                 }                
             }
@@ -451,10 +452,14 @@ namespace AutoPartsWebSite.Controllers
                 // --------------------------  begin add to Cart   ----------------------------------------
                 // create new preCart for display items before add them to card
                 List<Cart> preCart = new List<Cart> { };
-
+                int scAmount = 0;
                 foreach (SearchFileCriteria sc in SearchFileCriterias)
                 {
                     List<string> searchNumbers = new List<string> { sc.Number};
+                    if (!string.IsNullOrEmpty(sc.Amount))
+                    {
+                        scAmount = Convert.ToInt32(sc.Amount);
+                    }                        
 
                     // find and add replacement to numbers list
                     if ((bool)UseReplacement)
@@ -484,16 +489,16 @@ namespace AutoPartsWebSite.Controllers
                                     //AddCartItem(ap.Id, Convert.ToInt32(sc.Amount), sc.Reference1, sc.Reference2);
 
                                     // add to precart and exit
-                                    preCart.Add(NewPreCartItem(ap.Id, Convert.ToInt32(sc.Amount), sc.Reference1, sc.Reference2));
+                                    preCart.Add(NewPreCartItem(ap.Id, scAmount, sc.Reference1, sc.Reference2));
                                     break;
                                 }
-                                if (Convert.ToInt32(ap.Quantity) >= Convert.ToInt32(sc.Amount))
+                                if (Convert.ToInt32(ap.Quantity) >= scAmount)
                                 {
                                     // add to cart and exit                          
                                     //AddCartItem(ap.Id, Convert.ToInt32(sc.Amount), sc.Reference1, sc.Reference2);
 
                                     // add to precart and exit
-                                    preCart.Add(NewPreCartItem(ap.Id, Convert.ToInt32(sc.Amount), sc.Reference1, sc.Reference2));
+                                    preCart.Add(NewPreCartItem(ap.Id, scAmount, sc.Reference1, sc.Reference2));
                                     break;
                                 }
                                 else
@@ -503,7 +508,7 @@ namespace AutoPartsWebSite.Controllers
 
                                     // add to precart and continue loop
                                     preCart.Add(NewPreCartItem(ap.Id, Convert.ToInt32(ap.Quantity), sc.Reference1, sc.Reference2));
-                                    sc.Amount = (Convert.ToInt32(sc.Amount) - Convert.ToInt32(ap.Quantity)).ToString();
+                                    scAmount = scAmount - Convert.ToInt32(ap.Quantity);
                                 }
                             }
                         }
@@ -518,6 +523,9 @@ namespace AutoPartsWebSite.Controllers
 
                 Session["AutopartNumbersList"] = autopartNumbersList;
                 Session["AutopartSearchResult"] = preCart;
+
+                //Session["SearchFileCriterias"] = SearchFileCriterias;
+                //Session["uploadFileName"] = uploadFileName;
 
                 // return RedirectToAction("Index","Carts");
                 return View((IEnumerable<Cart>)preCart.OrderBy(x=>x.Price));
