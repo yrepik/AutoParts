@@ -469,7 +469,7 @@ namespace AutoPartsWebSite.Controllers
                               where searchNumbers.Contains(p.Number)
                               select p;
                     aps = aps.Where(p => p.Brand.Contains(sc.Brand));                 
-                    aps = aps.OrderBy(p => p.Price); // sort by price
+                    aps = aps.OrderByDescending(p => p.Price); // sort by price
                     if (aps != null)
                     {
                         foreach (Part ap in aps)
@@ -502,7 +502,7 @@ namespace AutoPartsWebSite.Controllers
                                     //AddCartItem(ap.Id, Convert.ToInt32(ap.Quantity), sc.Reference1, sc.Reference2);
 
                                     // add to precart and continue loop
-                                    preCart.Add(NewPreCartItem(ap.Id, Convert.ToInt32(sc.Amount), sc.Reference1, sc.Reference2));
+                                    preCart.Add(NewPreCartItem(ap.Id, Convert.ToInt32(ap.Quantity), sc.Reference1, sc.Reference2));
                                     sc.Amount = (Convert.ToInt32(sc.Amount) - Convert.ToInt32(ap.Quantity)).ToString();
                                 }
                             }
@@ -520,7 +520,7 @@ namespace AutoPartsWebSite.Controllers
                 Session["AutopartSearchResult"] = preCart;
 
                 // return RedirectToAction("Index","Carts");
-                return View((IEnumerable<Cart>)preCart);
+                return View((IEnumerable<Cart>)preCart.OrderBy(x=>x.Price));
             }
         }
 
