@@ -27,17 +27,20 @@
         <br>
         @if (Request.IsAuthenticated && User.IsInRole("RegistredUser"))
         {
-            @Html.ActionLink("Поиск запчастей из файла", "IndexFile", "Home")
-            <br>
-            <a href="~/Content/files/ALFAPARTS-Search.xlsx">Шаблон</a>
+			<a href="@Url.Action("IndexFile", "Home")"><img src="~/Content/img/find1.png"></a>
+			<a href="~/Content/files/ALFAPARTS-Search.xlsx"><img src="~/Content/img/find2.png"></a>
+			<br>
+			
         }
         @if (Request.IsAuthenticated && User.IsInRole("Admin"))
         {
             
             <br>
-            @Html.ActionLink("Поиск запчастей из файла (Admin mode)", "IndexFileAdmin", "Home")
+			<a href="@Url.Action("IndexFileAdmin", "Home")"><img src="~/Content/img/find3.png"></a>
+			<a href="~/Content/files/ALFAPARTS-SearchAdmin.xlsx"><img src="~/Content/img/find4.png"></a>
+           <br>
             <br>
-            <a href="~/Content/files/ALFAPARTS-SearchAdmin.xlsx">Шаблон (admin)</a>
+            
 
         }
         
