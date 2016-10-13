@@ -356,6 +356,7 @@
     <Content Include="Views\Home\IndexFile.cshtml" />
     <Content Include="Views\Home\IndexFileAdmin.cshtml" />
     <Content Include="Views\Carts\IndexAdmin.cshtml" />
+    <Content Include="Views\Parts\SearchFromFileAdmin.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

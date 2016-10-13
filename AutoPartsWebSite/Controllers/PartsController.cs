@@ -643,6 +643,19 @@ namespace AutoPartsWebSite.Controllers
             // list for search creterias
             List<SearchFileCriteriaAdmin> SearchFileCriterias = new List<SearchFileCriteriaAdmin> { };
 
+            string uploadFileName = "";
+            // take search creteria from session
+            if (upload == null && Session["SearchFileCriteriaAdmin"] != null)
+            {
+
+                List<SearchFileCriteriaAdmin> sessionSearch = (List<SearchFileCriteriaAdmin>)Session["SearchFileCriteriaAdmin"];
+                if (sessionSearch.Count() > 0)
+                {
+                    SearchFileCriterias = sessionSearch;
+                    uploadFileName = (string)Session["uploadFileNameAdmin"];
+                }
+            }
+
             //import files into search creterias list
             int firstDataRow = 2;
             try
@@ -668,7 +681,11 @@ namespace AutoPartsWebSite.Controllers
                             SearchFileCriterias.Add(SearchFileCriteriaItem);
                         }
                     }
-                    // finish                    
+                    // finish      
+
+                    Session["SearchFileCriteriaAdmin"] = SearchFileCriterias;
+                    uploadFileName = upload.FileName;
+                    Session["uploadFileNameAdmin"] = uploadFileName;
                 }
             }
             catch (Exception ex)
@@ -786,10 +803,16 @@ namespace AutoPartsWebSite.Controllers
                 }
 
                 // --------------------------  begin add to Cart   ----------------------------------------
-
+                // create new preCart for display items before add them to card
+                List<Cart> preCart = new List<Cart> { };
+                int scAmount = 0;
                 foreach (SearchFileCriteriaAdmin sc in SearchFileCriterias)
                 {
                     List<string> searchNumbers = new List<string> { sc.Number };
+                    if (!string.IsNullOrEmpty(sc.Amount))
+                    {
+                        scAmount = Convert.ToInt32(sc.Amount);
+                    }
 
                     // find and add replacement to numbers list
                     if ((bool)UseReplacement)
@@ -804,7 +827,7 @@ namespace AutoPartsWebSite.Controllers
                               where searchNumbers.Contains(p.Number)
                               select p;
                     aps = aps.Where(p => p.Brand.Contains(sc.Brand));
-                    aps = aps.OrderBy(p => p.Price); // sort by price
+                    aps = aps.OrderByDescending(p => p.Price); // sort by price
                     if (aps != null)
                     {
                         foreach (Part ap in aps)
@@ -816,39 +839,90 @@ namespace AutoPartsWebSite.Controllers
                                 if (!(bool)UseAmount)
                                 {
                                     // add to cart and exit                          
-                                    AddCartItemAdmin(ap.Id, Convert.ToInt32(sc.Amount), sc.Reference1, sc.Reference2, sc.Price, sc.Details);
+                                    // AddCartItemAdmin(ap.Id, scAmount, sc.Reference1, sc.Reference2, sc.Price, sc.Details);
+                                    preCart.Add(NewPreCartItemAdmin(ap.Id, scAmount, sc.Reference1, sc.Reference2, sc.Price, sc.Details));
                                     break;
                                 }
-                                if (Convert.ToInt32(ap.Quantity) >= Convert.ToInt32(sc.Amount))
+                                if (Convert.ToInt32(ap.Quantity) >= scAmount)
                                 {
                                     // add to cart and exit                          
-                                    AddCartItemAdmin(ap.Id, Convert.ToInt32(sc.Amount), sc.Reference1, sc.Reference2, sc.Price, sc.Details);
+                                    // AddCartItemAdmin(ap.Id, scAmount, sc.Reference1, sc.Reference2, sc.Price, sc.Details);
+                                    preCart.Add(NewPreCartItemAdmin(ap.Id, scAmount, sc.Reference1, sc.Reference2, sc.Price, sc.Details));
                                     break;
                                 }
                                 else
                                 {
                                     // add to cart and continue loop
-                                    AddCartItemAdmin(ap.Id, Convert.ToInt32(ap.Quantity), sc.Reference1, sc.Reference2, sc.Price, sc.Details);
-                                    sc.Amount = (Convert.ToInt32(sc.Amount) - Convert.ToInt32(ap.Quantity)).ToString();
+                                    // AddCartItemAdmin(ap.Id, Convert.ToInt32(ap.Quantity), sc.Reference1, sc.Reference2, sc.Price, sc.Details);
+                                    preCart.Add(NewPreCartItemAdmin(ap.Id, Convert.ToInt32(ap.Quantity), sc.Reference1, sc.Reference2, sc.Price, sc.Details));
+                                    scAmount = scAmount - Convert.ToInt32(ap.Quantity);
                                 }
                             }
                         }
                     }
                 }
                 // --------------------------  end add to Cart   ----------------------------------------
-
-                ViewBag.FileName = upload.FileName;
+               
+                ViewBag.FileName = uploadFileName;
                 ViewBag.DeliveryTime = DeliveryTime;
                 ViewBag.UseReplacement = UseReplacement;
                 ViewBag.UseAmount = UseAmount;
-
+                ViewBag.UseHidden = UseHidden;
 
                 Session["AutopartNumbersList"] = autopartNumbersList;
-                Session["AutopartSearchResult"] = autoparts;
+                Session["AutopartSearchResult"] = preCart;
 
-
-                return RedirectToAction("IndexAdmin", "Carts");
+                //return RedirectToAction("IndexAdmin", "Carts");
+                return View((IEnumerable<Cart>)preCart.OrderBy(x => x.Price));
             }
+        }
+
+        private Cart NewPreCartItemAdmin(int PartId, int Amount, string Reference1, string Reference2, string Price, string Details)
+        {
+            string currentUserId = User.Identity.GetUserId();
+            var userCart = (from s in db.Carts
+                            select s).Take(1000);
+            userCart = userCart.Where(s => s.UserId.Equals(currentUserId));
+
+            Part autopart = db.Parts.Find(PartId);
+            Cart cart = new Cart();
+            if ((autopart != null) && (Amount != 0))
+            {
+                cart.PartId = autopart.Id;
+                cart.UserId = User.Identity.GetUserId();
+                cart.Brand = autopart.Brand;
+                cart.Number = autopart.Number;
+                cart.Name = autopart.Name;
+                cart.Details = !string.IsNullOrEmpty(Details) ? Details : autopart.Details;
+                cart.Size = autopart.Size;
+                cart.Weight = autopart.Weight;
+                cart.Quantity = autopart.Quantity;
+                cart.Supplier = autopart.Supplier;
+                cart.Price = !string.IsNullOrEmpty(Price) ? Price : CalcUserPrice(autopart.Id); // CalcUserPrice(autopart.Id); // autopart.Price;
+                cart.DeliveryTime = autopart.DeliveryTime;
+                cart.Amount = Amount;
+                cart.Data = DateTime.Now;
+                cart.BasePrice = autopart.Price;
+                cart.Reference1 = Reference1;
+                cart.Reference2 = Reference2;
+            }
+            return cart;
+        }
+
+        public RedirectToRouteResult AddToCartMultiAdmin()
+        {
+            if (Session["SearchFileCriteriaAdmin"] != null)
+            {
+                List<Cart> preCartAdmin = (List<Cart>)Session["AutopartSearchResult"];
+                if(preCartAdmin != null)
+                {
+                    foreach (Cart cartAdmin in preCartAdmin)
+                    {
+                        AddCartItemAdmin(cartAdmin.PartId, (int)cartAdmin.Amount, cartAdmin.Reference1, cartAdmin.Reference2, cartAdmin.Price, cartAdmin.Details);
+                    }
+                }                
+            }
+            return RedirectToAction("IndexAdmin", "Carts");
         }
 
         private void AddCartItemAdmin(int PartId, int Amount, string Reference1, string Reference2, string Price, string Details)
@@ -906,7 +980,6 @@ namespace AutoPartsWebSite.Controllers
                     }
                 }
             }
-
         }
 
         private void FindPart(List<SearchFileCriteria> searchCriterias, List<Part> aParts)

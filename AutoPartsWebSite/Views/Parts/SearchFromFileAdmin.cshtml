@@ -1,0 +1,234 @@
+﻿﻿@model IEnumerable<AutoPartsWebSite.Models.Cart>
+
+
+@{
+    ViewBag.Title = "Поиск запчастей из файла";
+    int maxSearchItemCount = 1;
+    int maxSearchRowsCount = 1;
+    string searchMsgText = "Для поиска более 1-й позиции требуется авторизация";
+}
+
+@if (Request.IsAuthenticated && User.IsInRole("RegistredUser"))
+{
+    maxSearchItemCount = ViewBag.SearchLimit;
+    maxSearchRowsCount = 10; //toDo: good to change it to maxSearchItemCount and add scroling
+    searchMsgText = "Результат для поиска " + @ViewBag.SearchLimit + " позиций из " + @ViewBag.ItemsToSearch;
+}
+<DIV class="main-text">
+
+    <h2 id="cntr">ПОИСК ПО НОМЕРУ ЗАПЧАСТИ ИЗ ФАЙЛА</h2>
+
+    <div class="reg-form">
+        <br>
+
+        @*@using (Html.BeginForm("Search", "Parts", FormMethod.Post))
+            {
+
+                @Html.TextArea("autopartNumbers", new { rows = maxSearchRowsCount, columns = 60 })
+                <input type="submit" value="НАЙТИ" />
+
+            }*@
+
+
+        @using (Html.BeginForm("SearchFromFileAdmin", "Parts", null, FormMethod.Post, new { enctype = "multipart/form-data" }))
+        {
+            @Html.AntiForgeryToken()
+
+            <div class="form-horizontal">
+
+                @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                <div class="form-group">
+                    @Html.Label("Имя файла ", htmlAttributes: new { @class = "control-label col-md-2" }) @ViewBag.FileName
+                    <div class="col-md-10">
+                        <input type="file" placeholder="Имя файла" name="upload" id="upload_hidden" onchange="document.getElementById('upload_visible').value = this.value;" accept=".xlsx" />
+                        <input type="text" placeholder="Имя файла" readonly="1" id="upload_visible" onclick="document.getElementById('upload_hidden').click();" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    @Html.Label("Срок поставки", htmlAttributes: new { @class = "control-label col-md-2" })
+                    <div class="col-md-10">
+                        <input type="number" value="@ViewBag.DeliveryTime" id="DeliveryTime" name="DeliveryTime" min="1" max="14" placeholder="Срок поставки" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-md-10">
+                        <label>
+                            @Html.CheckBox("UseAmount", true)
+                            Кол-во из файла
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-md-10">
+                        <label>
+                            @Html.CheckBox("UseReplacement", true)
+                            Искать с заменами
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-md-10">
+                        <label>
+                            @Html.CheckBox("UseHidden", true)
+                            Искать в скрытых постащиках
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-md-offset-2 col-md-10">
+                        <input type="submit" value="НАЙТИ" />
+                    </div>
+                </div>
+            </div>
+        }
+
+
+
+
+
+        @if (ViewBag.SearchLimit < ViewBag.ItemsToSearch)
+        {
+            <div>
+                @searchMsgText
+            </div>
+        }
+
+    </div>
+</DIV>
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayName("Марка")
+        </th>
+        <th>
+            @Html.DisplayName("Номер")
+        </th>
+        <th>
+            @Html.DisplayName("Описание")
+        </th>
+        <th>
+            @Html.DisplayName("Объем")
+        </th>
+        <th>
+            @Html.DisplayName("Вес")
+        </th>
+        <th>
+            @Html.DisplayName("Срок поставки")
+        </th>
+        <th>
+            @Html.DisplayName("Цена")
+        </th>
+        <th>
+            @Html.DisplayName("Поставщик")
+        </th>
+        <th>
+            @Html.DisplayName("Наличие")
+        </th>
+        @if (Request.IsAuthenticated && User.IsInRole("RegistredUser"))
+        {
+            <th>
+                @Html.DisplayName("Количество")
+            </th>
+            <th>
+                @Html.DisplayName("Ref1")
+            </th>
+            <th>
+                @Html.DisplayName("Ref2")
+            </th>
+            @*<th>
+                    @Html.DisplayName("Стоимость")
+                </th>*@
+        }
+    </tr>
+
+    @using (Html.BeginForm("AddToCartMultiAdmin", "Parts"))
+    {
+
+        foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Brand)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Number)
+                </td>
+                <td TITLE="@Html.DisplayFor(modelItem => item.Name)">
+                    @Html.DisplayFor(modelItem => item.Details)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Size)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Weight)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.DeliveryTime)
+                </td>
+                <td>
+                    @Math.Round(Convert.ToDecimal(item.Price), 2).ToString()
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Supplier)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Quantity)
+                </td>
+                @if (Request.IsAuthenticated && User.IsInRole("RegistredUser"))
+                {
+                    <td>
+                        @Html.TextBox("Amount" + item.PartId, item.Amount, new { PartId = item.PartId, type = "number", min = "0", max = item.Quantity })
+                        @*@Html.DisplayFor(modelItem => item.Amount)*@
+                    </td>
+                    <td>
+                        @Html.TextBox("Reference1" + item.PartId, item.Reference1, new { PartId = item.PartId })
+                    </td>
+                    <td>
+                        @Html.TextBox("Reference2" + item.PartId, item.Reference2, new { PartId = item.PartId })
+                    </td>
+                    @*<td>
+                            @Html.DisplayFor(modelItem => item.Total)
+                        </td>*@
+                }
+            </tr>
+        }
+        <tfoot align="left" style="background: #fc0">
+            @*<tr>
+                    <td colspan="11"></td>
+                    <td>
+                        Всего деталей: @Model.Sum(x => x.Amount)
+                    </td>
+                    <td>
+                        Общая сумма:<br><span id="red">
+                            @{  decimal preCartSum = Convert.ToDecimal(Model.Sum(x => x.Total));}
+                            @preCartSum.ToString("N")
+                            USD
+                        </span>
+                    </td>
+                </tr>*@
+            <tr class="trCart">
+                <td id="white" colspan="14">
+                    @Html.Hidden("returnUrl", Request.Url.PathAndQuery)
+                    <input type="submit" id="cntr" class="btn btn-success but" value="ДОБАВИТЬ В КОРЗИНУ" />
+                </td>
+            </tr>
+        </tfoot>
+    }
+</table>
+@*if (Request.IsAuthenticated && User.IsInRole("RegistredUser"))
+    {
+    <div id="cntr">
+        @Html.Hidden("returnUrl", Request.Url.PathAndQuery)
+        <input type="submit" id="cntr" class="btn btn-success but" value="ДОБАВИТЬ В КОРЗИНУ" />
+    </div>
+    }
+    <div id="cntr">
+        <br>
+        @Html.ActionLink("Экспорт результатов в Excel", "Excel")
+    </div>
+    <br>*@

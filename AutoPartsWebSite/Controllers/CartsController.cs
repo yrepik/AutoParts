@@ -211,7 +211,7 @@ namespace AutoPartsWebSite.Controllers
         }
 
         // GET: Carts/Edit/5
-        public ActionResult Edit(int? id)
+        public ActionResult Edit(int? id, bool am = false)
         {
             if (id == null)
             {
@@ -230,20 +230,24 @@ namespace AutoPartsWebSite.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "Id,PartId,UserId,Brand,Number,Name,Details,Size,Weight,Quantity,Price,Supplier,DeliveryTime,Amount,Data,Reference1,Reference2")] Cart cart)
+        public ActionResult Edit([Bind(Include = "Id,PartId,UserId,Brand,Number,Name,Details,Size,Weight,Quantity,Price,Supplier,DeliveryTime,Amount,Data,Reference1,Reference2")] Cart cart, bool am = false)
         {
             if (ModelState.IsValid)
             {
                 cart.Data = DateTime.Now;
                 db.Entry(cart).State = EntityState.Modified;                
                 db.SaveChanges();
+                if (am)
+                {
+                    return RedirectToAction("IndexAdmin");
+                }
                 return RedirectToAction("Index");
             }
             return View(cart);
         }
 
         // GET: Carts/Delete/5
-        public ActionResult Delete(int? id)
+        public ActionResult Delete(int? id, bool am = false)
         {
             if (id == null)
             {
@@ -260,11 +264,15 @@ namespace AutoPartsWebSite.Controllers
         // POST: Carts/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public ActionResult DeleteConfirmed(int id)
+        public ActionResult DeleteConfirmed(int id, bool am = false)
         {
             Cart cart = db.Carts.Find(id);
             db.Carts.Remove(cart);
             db.SaveChanges();
+            if (am)
+            {
+                return RedirectToAction("IndexAdmin");
+            }
             return RedirectToAction("Index");
         }
                
@@ -278,9 +286,24 @@ namespace AutoPartsWebSite.Controllers
             {
                 db.Carts.RemoveRange(userCart);                
                 db.SaveChanges();
-            }            
+            } 
             return RedirectToAction("Index");
         }
+
+        public ActionResult DeleteUserCartAdmin()
+        {
+            string currentUserId = User.Identity.GetUserId();
+            var userCart = from c in db.Carts
+                           where c.UserId.Equals(currentUserId)
+                           select c;
+            if (userCart != null)
+            {
+                db.Carts.RemoveRange(userCart);
+                db.SaveChanges();
+            }
+            return RedirectToAction("Index");
+        }
+
 
         public void AddToCartItem(int PartId, int Amount, string Reference1, string Reference2)
         {

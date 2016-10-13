@@ -62,7 +62,7 @@
                 @Html.DisplayFor(modelItem => item.Brand)
             </td>
             <td>
-                @Html.ActionLink(item.Number, "Edit", new { id = item.Id })
+                @Html.ActionLink(item.Number, "Edit", new { id = item.Id, am = true })
             </td>
             <td TITLE="@Html.DisplayFor(modelItem => item.Name)">
                 @Html.DisplayFor(modelItem => item.Details)
@@ -92,10 +92,10 @@
                 @Html.ActionLink(item.Amount.ToString(), "Edit", new { id = item.Id })
             </td>
             <td>
-                @Html.ActionLink(!string.IsNullOrEmpty(item.Reference1) ? item.Reference1.ToString() : " ", "Edit", new { id = item.Id })
+                @Html.ActionLink(!string.IsNullOrEmpty(item.Reference1) ? item.Reference1.ToString() : " ", "Edit", new { id = item.Id, am = true })
             </td>
             <td>
-                @Html.ActionLink(!string.IsNullOrEmpty(item.Reference2) ? item.Reference2.ToString() : " ", "Edit", new { id = item.Id })
+                @Html.ActionLink(!string.IsNullOrEmpty(item.Reference2) ? item.Reference2.ToString() : " ", "Edit", new { id = item.Id, am = true })
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.Total)
@@ -105,6 +105,8 @@
                 {
                     @Html.AntiForgeryToken()
                     @Html.Hidden("id", item.Id)
+                    @Html.Hidden("am", true)
+
                     <input type="submit" value="X" class="btn btn-link del" />
                 }
 
@@ -113,7 +115,7 @@
     }
     <tfoot align="left" style="background: #fc0">
         <tr>
-            <td colspan="11"></td>
+            <td colspan="12"></td>
             <td>
                 @*Всего деталей: @ViewBag.CartCount*@
                 Всего деталей: @Model.Sum(x => x.Amount)
@@ -132,7 +134,7 @@
 </table>
 
 <div id="riht">
-    @Html.ActionLink("Очистить корзину", "DeleteUserCart", routeValues: null, htmlAttributes: new { @class = "btn btn-success alink1" })
+    @Html.ActionLink("Очистить корзину", "DeleteUserCartAdmin", routeValues: null, htmlAttributes: new { @class = "btn btn-success alink1" })
 </div>
 @if (((AutoPartsWebSite.Controllers.CartsController)this.ViewContext.Controller).PositiveUserCartBalans() && (Model.Count() > 0))
 {
