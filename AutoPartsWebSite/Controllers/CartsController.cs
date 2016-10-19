@@ -39,6 +39,29 @@ namespace AutoPartsWebSite.Controllers
         //    return total; // ?? decimal.Zero;
         //}
 
+        [HttpPost]
+        public ActionResult UpdateQty(int id, int Amount, bool am = false)
+        {
+            Cart cart = db.Carts.Find(id);
+            if (cart == null)
+            {
+                return HttpNotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                cart.Amount = Amount;
+                db.Entry(cart).State = EntityState.Modified;
+                db.SaveChanges();
+                if (am)
+                {
+                    return RedirectToAction("IndexAdmin");
+                }
+                return RedirectToAction("Index");
+            }
+            return View(cart);
+        }
+
         public int GetCount()
         {
             string currentUserId = User.Identity.GetUserId();

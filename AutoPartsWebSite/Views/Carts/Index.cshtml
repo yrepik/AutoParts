@@ -82,7 +82,14 @@
             @Html.DisplayFor(modelItem => item.Quantity)
         </td>        
         <td>
-            @Html.ActionLink(item.Amount.ToString(), "Edit", new { id = item.Id })                    
+            @*@Html.ActionLink(item.Amount.ToString(), "Edit", new { id = item.Id })*@   
+            @using (Html.BeginForm("UpdateQty", "Carts", FormMethod.Post))
+                {
+                @Html.AntiForgeryToken()
+                @Html.Hidden("id", item.Id)
+                @Html.TextBox("Amount", item.Amount.ToString(), new { Id = "Amount", type = "number", min = "1", max = item.Quantity })
+                <input type="submit" value=">" />
+            }                 
         </td>
         <td>
             @Html.ActionLink(!string.IsNullOrEmpty(item.Reference1) ? item.Reference1.ToString() : " " , "Edit", new { id = item.Id })                        
