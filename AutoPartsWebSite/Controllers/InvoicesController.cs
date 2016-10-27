@@ -404,15 +404,20 @@ namespace AutoPartsWebSite.Controllers
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
             InvoiceItem invoiceItem = db.InvoiceItems.Find(id);
+            if (invoiceItem == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+
             ViewBag.InvoiceId = invoiceItem.InvoiceId;
             ViewBag.invoiceItemRest = invoiceItem.Rest;
 
-            int[] invOrderItems = (from invoiceDistributions in db.InvoiceDistributions
-                                   where invoiceDistributions.InvoiceItemId == id
-                                   select invoiceDistributions.OrderItemId).ToArray();
-            ViewBag.OrderItemsList = from orderItems in db.OrderItems                                         
-                                    where invOrderItems.Contains(orderItems.Id)
-                                 select new SelectListItem { Text = "Заказ № " + orderItems.OrderId.ToString() 
+            ViewBag.OrderItemsList = from orderItems in db.OrderItems
+                                     where (orderItems.Number == invoiceItem.Number
+                                            && orderItems.Brand == invoiceItem.Brand
+                                            && orderItems.State == 1
+                                            )
+                                     select new SelectListItem { Text = "Заказ № " + orderItems.OrderId.ToString() 
                                                                     + " позиция # " + orderItems.Id.ToString()
                                                                     + " к-во: " + orderItems.Amount.ToString()
                                                                     //+ " от " + orderItems.Data.Value.ToString("dd.MM.yyyy")

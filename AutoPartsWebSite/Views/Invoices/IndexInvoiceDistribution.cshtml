@@ -9,7 +9,7 @@
             @Html.DisplayNameFor(model => model.Quantity)
         </th>
         <th>
-            @if ((ViewBag.InvoiceDistributionsCount > 0) && (ViewBag.invoiceItemRest > 0))
+            @if ((ViewBag.InvoiceDistributionsCount >= 0) && (ViewBag.invoiceItemRest > 0))
             {
                 @Html.ActionLink("+", "CreateInvoiceDistribution", new { id = ViewBag.InvoiceItemId })
             }
