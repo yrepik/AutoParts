@@ -7,6 +7,12 @@ using System.Net;
 using System.Web;
 using System.Web.Mvc;
 using AutoPartsWebSite.Models;
+using Postal;
+using Microsoft.AspNet.Identity.Owin;
+using IdentityAutoPart.Models;
+using Microsoft.AspNet.Identity;
+using OfficeOpenXml;
+using System.IO;
 
 namespace AutoPartsWebSite.Controllers
 {
@@ -87,6 +93,13 @@ namespace AutoPartsWebSite.Controllers
         {
             if (ModelState.IsValid)
             {
+                // check state and send an e-mail
+                //var original = db.OrderItems.Find(orderItem.Id);
+                //if (original.State != orderItem.State)
+                //{
+                //    SendEmail(orderItem);
+                //}
+
                 db.Entry(orderItem).State = EntityState.Modified;
                 db.SaveChanges();
                 return RedirectToAction("Index");
@@ -119,6 +132,151 @@ namespace AutoPartsWebSite.Controllers
             db.OrderItems.Remove(orderItem);
             db.SaveChanges();
             return RedirectToAction("Index");
+        }
+
+        public int getOrderItemState(OrderItem orderItem)
+        {
+            if (orderItem == null)
+            {
+                return 0;
+            }
+            else
+            {
+                return orderItem.State;
+            }
+        }
+
+        public int setOrderItemState(int id, int newstate)
+        {
+            int returnValue = 0;
+
+            OrderItem orderItem = db.OrderItems.Find(id);
+            if (orderItem == null)
+            {
+                return returnValue;
+            }
+
+            if (orderItem.State == newstate)
+            {
+                return returnValue;
+            }
+
+            returnValue = (orderItem.State < newstate) ? 1 : -1;           
+
+            if (ModelState.IsValid)
+            {
+                orderItem.State = newstate;
+                db.Entry(orderItem).State = EntityState.Modified;
+                db.SaveChanges();
+            }
+            // send send an e-mail about order item state changes
+            SendEmail(orderItem);
+            return returnValue;
+        }
+
+        public void SendEmail(OrderItem orderItem)
+        {
+            var user = HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>().FindById(orderItem.UserId);
+            // send e-mail to admin
+
+            dynamic adminNewOrder = new Email("adminChangeOrderItem");
+            adminNewOrder.To = "admins@alfa-parts.com";
+            adminNewOrder.Order = orderItem.OrderId;
+            adminNewOrder.OrderItem = orderItem.Id;
+            adminNewOrder.OrderItemState = orderItem.State;
+            adminNewOrder.Send();
+
+            // send e-mail to user
+            dynamic userNewOrder = new Email("userChangeOrderItem");
+            userNewOrder.To = user.Email;
+            userNewOrder.Order = orderItem.OrderId;
+            userNewOrder.OrderItem = orderItem.Id;
+            userNewOrder.OrderItemState = orderItem.State;
+            userNewOrder.Send();
+        }
+
+        public ActionResult IndexState()
+        {
+            if (TempData["shortMessage"] == null)
+            {
+                ViewBag.Message = "";
+            }
+            else
+            {
+                ViewBag.Message = TempData["shortMessage"].ToString();
+            }
+
+            var orderItems = from s in db.OrderItems
+                             where s.State < 6
+                             select s;
+            return View(orderItems.ToList());
+        }
+        public ActionResult ExcelExportState()
+        {
+            var orderItems = from s in db.OrderItems
+                                where s.State < 6
+                                select new { s.Id , s.State, s.OrderId, s.Number, s.Name, s.Details };
+            using (ExcelPackage pck = new ExcelPackage())
+            {
+                ExcelWorksheet ws = pck.Workbook.Worksheets.Add("ALFAPARTS-OrderItemsState");
+                ws.Cells["A1"].LoadFromCollection(orderItems, true);                
+                // ToDo: еще нужно будет добавить русские хидеры
+                Byte[] fileBytes = pck.GetAsByteArray();
+                Response.Clear();
+                Response.Buffer = true;
+                Response.AddHeader("content-disposition", "attachment;filename=ALFAPARTS-OrderItemsState.xlsx");
+                // Заменяю имя выходного Эксель файла
+                Response.Charset = "";
+                Response.ContentType = "application/vnd.ms-excel";
+                StringWriter sw = new StringWriter();
+                Response.BinaryWrite(fileBytes);
+                Response.End();
+            }
+            TempData["shortMessage"] = "<br> Экспорт завершен";
+            return RedirectToAction("IndexState");
+        }
+
+        public ActionResult ExcelImportState()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult ExcelImportState(HttpPostedFileBase upload)
+        {
+            int firstDataRow = 2;
+            int orderItemId;
+            int orderItemState;
+            string infoMessage = "";
+            try
+            {
+                if (upload != null && upload.ContentLength > 0)
+                {                    
+                    using (ExcelPackage package = new ExcelPackage(upload.InputStream))
+                    {
+                        ExcelWorksheet worksheet = package.Workbook.Worksheets.FirstOrDefault();
+                        for (int i = firstDataRow; i <= worksheet.Dimension.End.Row; i++)
+                        {
+                            orderItemId = Convert.ToInt32(worksheet.Cells["A" + i.ToString()].Value.ToString());
+                            orderItemState = Convert.ToInt32(worksheet.Cells["B" + i.ToString()].Value.ToString());
+                            if (orderItemState > 6) orderItemState = 6;
+                            if (setOrderItemState(orderItemId, orderItemState)  < 0)
+                            {
+                                infoMessage = "Позиция " + orderItemId + "  - произошло уменьшение статуса <br>";
+                            }                            
+                        }
+                    }
+                    TempData["shortMessage"] = infoMessage + "<br> Импорт завершен.";
+                }
+                return RedirectToAction("IndexState");
+            }
+            catch (Exception ex)
+            {
+                TempData["shortMessage"] = "Ошибка импорта:" + ex.Message.ToString();
+
+                return RedirectToAction("IndexState");
+            }
         }
 
         protected override void Dispose(bool disposing)

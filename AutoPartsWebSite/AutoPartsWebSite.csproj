@@ -357,6 +357,10 @@
     <Content Include="Views\Home\IndexFileAdmin.cshtml" />
     <Content Include="Views\Carts\IndexAdmin.cshtml" />
     <Content Include="Views\Parts\SearchFromFileAdmin.cshtml" />
+    <Content Include="Views\Emails\adminChangeOrderItem.cshtml" />
+    <Content Include="Views\Emails\userChangeOrderItem.cshtml" />
+    <Content Include="Views\OrderItemsAdmin\IndexState.cshtml" />
+    <Content Include="Views\OrderItemsAdmin\ExcelImportState.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

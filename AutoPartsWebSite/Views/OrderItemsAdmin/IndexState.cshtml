@@ -1,0 +1,16 @@
+﻿@{
+    ViewBag.Title = "СТАТУСЫ";
+}
+
+<DIV class="main-text">
+    <h1 id="cntr">@ViewBag.Title</h1>
+
+    <div class="reg-form">
+        <br>
+        <p>
+            @Html.ActionLink("Импорт (Excel)", "ExcelImportState") |
+            @Html.ActionLink("Экспорт (Excel)", "ExcelExportState")
+        </p>
+    </div>
+    @Html.Raw(ViewBag.Message)   
+</DIV>
