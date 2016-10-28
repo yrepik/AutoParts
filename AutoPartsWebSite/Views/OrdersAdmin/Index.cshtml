@@ -50,7 +50,14 @@
             @userFN
         </td>
         <td>@Html.DisplayFor(modelItem => item.Summary)</td>
-        <td>@Html.ActionLink("Детально", "IndexOrderItems", new { id=item.Id })</td>
+        @if (((AutoPartsWebSite.Controllers.OrdersAdminController)this.ViewContext.Controller).GetOrderItemsCont(item.Id) == 0)
+        {
+            <td>@Html.ActionLink("X", "Delete", new { id = item.Id })</td>
+        }
+        else
+        {
+            <td>@Html.ActionLink("Детально", "IndexOrderItems", new { id = item.Id })</td>
+        }        
     </tr>
 }
 </table>

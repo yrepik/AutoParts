@@ -1,0 +1,32 @@
+﻿@model AutoPartsWebSite.Models.OrderItem
+
+@{
+    ViewBag.Title = "УДАЛЕНИЕ ПОЗИЦИИ ЗАКАЗА";
+}
+
+<DIV class="main-text">
+    <h1 id="cntr">@ViewBag.Title</h1>
+    <div class="reg-form">
+        <br>
+
+        <h3>Внимание!</h3>
+        <p>Заказ: <span id="red">@Html.DisplayFor(model => model.OrderId)</span></p>
+        <p>Позиция: @Html.DisplayFor(model => model.Id)</p>
+        <p>Марка: @Html.DisplayFor(model => model.Brand)</p>
+        <p>Номер: @Html.DisplayFor(model => model.Number)</p>
+        <p>Описание: @Html.DisplayFor(model => model.Details)</p>
+        <p>Количество: @Html.DisplayFor(model => model.Amount)</p>
+
+        @using (Html.BeginForm())
+        {
+            @Html.AntiForgeryToken()
+
+            <div class="form-actions no-color">
+                <input type="submit" value="УДАЛИТЬ" class="btn btn-default" />
+            </div>
+        }
+    </div>
+</DIV>
+<div id="cntr">
+    @Html.ActionLink("Вернуться к позициям заказа", "Index")
+</div><br>

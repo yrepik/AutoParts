@@ -19,6 +19,14 @@
         @Html.HiddenFor(model => model.OrderId)
         @Html.HiddenFor(model => model.PartId)
         @Html.HiddenFor(model => model.UserId)
+                
+        @Html.HiddenFor(model => model.Size)
+        @Html.HiddenFor(model => model.Weight)
+        @Html.HiddenFor(model => model.Quantity)
+        @Html.HiddenFor(model => model.Price)
+        @Html.HiddenFor(model => model.Supplier)
+        @Html.HiddenFor(model => model.DeliveryTime)
+        @Html.HiddenFor(model => model.Data)
 
         <div class="form-group">
             
@@ -52,48 +60,42 @@
             </div>
         </div>
 
-        <div class="form-group">
-            
+        @*<div class="form-group">            
             <div class="col-md-10">
                 @Html.EditorFor(model => model.Size, new { htmlAttributes = new { @class = "form-control", placeholder="ОБЪЕМ", @readonly = "readonly" } })
                 @Html.ValidationMessageFor(model => model.Size, "", new { @class = "text-danger" })
             </div>
         </div>
 
-        <div class="form-group">
-            
+        <div class="form-group">            
             <div class="col-md-10">
                 @Html.EditorFor(model => model.Weight, new { htmlAttributes = new { @class = "form-control", placeholder="ВЕС", @readonly = "readonly" } })
                 @Html.ValidationMessageFor(model => model.Weight, "", new { @class = "text-danger" })
             </div>
         </div>
 
-        <div class="form-group">
-            
+        <div class="form-group">            
             <div class="col-md-10">
                 @Html.EditorFor(model => model.Quantity, new { htmlAttributes = new { @class = "form-control", placeholder="НАЛИЧИЕ", @readonly = "readonly" } })
                 @Html.ValidationMessageFor(model => model.Quantity, "", new { @class = "text-danger" })
             </div>
         </div>
 
-        <div class="form-group">
-            
+        <div class="form-group">            
             <div class="col-md-10">
                 @Html.EditorFor(model => model.PriceRnd, new { htmlAttributes = new { @class = "form-control", placeholder="ЦЕНА", @readonly = "readonly" } })
                 @Html.ValidationMessageFor(model => model.Price, "", new { @class = "text-danger" })
             </div>
         </div>
 
-        <div class="form-group">
-            
+        <div class="form-group">            
             <div class="col-md-10">
                 @Html.EditorFor(model => model.Supplier, new { htmlAttributes = new { @class = "form-control", placeholder="ПОСТАВЩИК", @readonly = "readonly" } })
                 @Html.ValidationMessageFor(model => model.Supplier, "", new { @class = "text-danger" })
             </div>
         </div>
 
-        <div class="form-group">
-            
+        <div class="form-group">            
             <div class="col-md-10">
                 @Html.EditorFor(model => model.DeliveryTime, new { htmlAttributes = new { @class = "form-control", placeholder="СРОК ДОСТАВКИ", @readonly = "readonly" } })
                 @Html.ValidationMessageFor(model => model.DeliveryTime, "", new { @class = "text-danger" })
@@ -101,17 +103,17 @@
         </div>
 
         <div class="form-group">
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.Data, new { htmlAttributes = new { @class = "form-control", placeholder = "ДАТА ЗАКАЗА", @readonly = "readonly" } })
+                @Html.ValidationMessageFor(model => model.Data, "", new { @class = "text-danger" })
+            </div>
+        </div>*@
+
+        <div class="form-group">
             
             <div class="col-md-10">
                 @Html.EditorFor(model => model.Amount, new { htmlAttributes = new { @class = "form-control", placeholder="КОЛИЧЕСТВО", @readonly = "readonly" } })
                 @Html.ValidationMessageFor(model => model.Amount, "", new { @class = "text-danger" })
-            </div>
-        </div>
-
-        <div class="form-group">            
-            <div class="col-md-10">
-                @Html.EditorFor(model => model.Data, new { htmlAttributes = new { @class = "form-control", placeholder="ДАТА ЗАКАЗА", @readonly = "readonly" } })
-                @Html.ValidationMessageFor(model => model.Data, "", new { @class = "text-danger" })
             </div>
         </div>
 

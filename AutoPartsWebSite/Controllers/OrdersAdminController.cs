@@ -74,29 +74,6 @@ namespace AutoPartsWebSite.Controllers
             return View(orders.ToPagedList(pageNumber, pageSize));
         }
 
-        public ActionResult IndexOrderItems(int? id)
-        {
-            if (id == null)
-            {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
-            }
-
-            //var orderItems = from s in db.OrderItems select s;
-            ////var orderItems = db.OrderItems.Include(o => o.Order);
-            //orderItems = orderItems.Where(s => s.Id.Equals(id));
-
-            // var orderItems = db.OrderItems.Include(o => o.Order).Where(o => o.Order.Id.Equals(id));
-            var orderItems = db.OrderItems.Include(o => o.Order)
-                .Where(o => o.Order.Id == id);
-
-            if (orderItems == null)
-            {
-                return HttpNotFound();
-            }
-
-            return View(orderItems.ToList());
-        }
-
         // GET: OrdersAdmin/Details/5
         public ActionResult Details(int? id)
         {
@@ -112,35 +89,7 @@ namespace AutoPartsWebSite.Controllers
             return View(order);
         }
 
-        public ActionResult EditOrderItems(int? id)
-        {
-            if (id == null)
-            {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
-            }
-            OrderItem orderItems = db.OrderItems.Find(id);
-            if (orderItems == null)
-            {
-                return HttpNotFound();
-            }
-            return View(orderItems);
-        }       
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult EditOrderItems([Bind(Include = "Id,OrderId,PartId,UserId,Brand,Number,Name,Details,Size,Weight,Quantity,Price,Supplier,DeliveryTime,Amount,Data,State")] OrderItem orderItem)
-        // public ActionResult EditOrderItems([Bind(Include = "Brand,Number,Name,Details,Size,Weight,Quantity,Price,Supplier,DeliveryTime,Amount,Data,State")] OrderItem orderItem)
-        {
-            if (ModelState.IsValid)
-            {
-                db.Entry(orderItem).State = EntityState.Modified;                
-                SendEmail(db.Orders.Find(orderItem.OrderId)); // send notifications
-                db.SaveChanges();
-                return RedirectToAction("IndexOrderItems", new { id = orderItem.OrderId });
-            }
-            ViewBag.OrderId = new SelectList(db.Orders, "Id", "UserId", orderItem.OrderId);
-            return View(orderItem);
-        }
+       
 
         // GET: OrdersAdmin/Create
         public ActionResult Create()
@@ -229,6 +178,91 @@ namespace AutoPartsWebSite.Controllers
         }
 
 
+        //===================================
+
+        public ActionResult IndexOrderItems(int? id)
+        {
+            if (id == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+
+            //var orderItems = from s in db.OrderItems select s;
+            ////var orderItems = db.OrderItems.Include(o => o.Order);
+            //orderItems = orderItems.Where(s => s.Id.Equals(id));
+
+            // var orderItems = db.OrderItems.Include(o => o.Order).Where(o => o.Order.Id.Equals(id));
+            var orderItems = db.OrderItems.Include(o => o.Order)
+                .Where(o => o.Order.Id == id);
+
+            if (orderItems == null)
+            {
+                return HttpNotFound();
+            }
+
+            return View(orderItems.ToList());
+        }
+
+        public ActionResult EditOrderItems(int? id)
+        {
+            if (id == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+            OrderItem orderItems = db.OrderItems.Find(id);
+            if (orderItems == null)
+            {
+                return HttpNotFound();
+            }
+            return View(orderItems);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]        
+        public ActionResult EditOrderItems([Bind(Include = "Id,OrderId,PartId,UserId,Brand,Number,Name,Details,Size,Weight,Quantity,Price,Supplier,DeliveryTime,Amount,Data,State")] OrderItem orderItem)
+        //public ActionResult EditOrderItems([Bind(Include = "Id,OrderId,PartId,UserId,Brand,Number,Name,Details,Amount,Data,State")] OrderItem orderItem)
+        // public ActionResult EditOrderItems([Bind(Include = "Brand,Number,Name,Details,Size,Weight,Quantity,Price,Supplier,DeliveryTime,Amount,Data,State")] OrderItem orderItem)
+        {
+            if (ModelState.IsValid)
+            {
+                db.Entry(orderItem).State = EntityState.Modified;
+                SendEmail(db.Orders.Find(orderItem.OrderId)); // send notifications
+                db.SaveChanges();
+                return RedirectToAction("IndexOrderItems", new { id = orderItem.OrderId });
+            }
+            ViewBag.OrderId = new SelectList(db.Orders, "Id", "UserId", orderItem.OrderId);
+            return View(orderItem);
+        }
+
+        // GET: OrdersAdmin/Delete/5
+        public ActionResult DeleteOrderItems(int? id)
+        {
+            if (id == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+            OrderItem orderItem = db.OrderItems.Find(id);
+            if (orderItem == null)
+            {
+                return HttpNotFound();
+            }
+            return View(orderItem);
+        }
+
+        // POST: OrdersAdmin/Delete/5
+        [HttpPost, ActionName("DeleteOrderItems")]
+        [ValidateAntiForgeryToken]
+        public ActionResult DeleteOrderItemsConfirmed(int id)
+        {
+            OrderItem orderItem = db.OrderItems.Find(id);
+            int orderId = orderItem.OrderId;
+            Order order = db.Orders.Find(id);
+            db.OrderItems.Remove(orderItem);
+            db.SaveChanges();                      
+            return RedirectToAction("Index");
+        }
+
+
         public void SendEmail(Order neworder)
         {
             var user = HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>().FindById(neworder.UserId);
@@ -245,6 +279,25 @@ namespace AutoPartsWebSite.Controllers
             adminNewOrder.Order = neworder;
             userNewOrder.Send();
         }
+
+        public int GetOrderItemsCont(int id)
+        {
+            Order order = db.Orders.Find(id);
+            if (order == null)
+            {
+                return -1;
+            }
+
+            var orderItems = db.OrderItems.Include(o => o.Order)
+               .Where(o => o.Order.Id == id);            
+            if (orderItems == null)
+            {
+                return 0;
+            }
+
+            return orderItems.Count();
+        }
+                
         protected override void Dispose(bool disposing)
         {
             if (disposing)

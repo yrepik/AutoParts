@@ -4,10 +4,18 @@
     ViewBag.Title = "КОРЗИНА";
 }
 
-	<DIV class="main-text">
+<DIV class="main-text">
 	<h1 id="cntr">@ViewBag.Title</h1>
-	</DIV>
-
+    <div class="reg-form">
+        <br>
+        <p>
+            @Html.ActionLink("Экспорт (Excel)", "ExcelExport")
+        </p>
+    </div>
+    @Html.Raw(ViewBag.Message)
+    
+</DIV>
+@ViewBag.Message
 <table class="table">
     <tr>
         <th>
@@ -130,20 +138,22 @@
     </tfoot>
 </table>
 
-<div id="riht">
-    @Html.ActionLink("Очистить корзину", "DeleteUserCart", routeValues: null, htmlAttributes: new { @class = "btn btn-success alink1" })
-</div>
-
-@if (((AutoPartsWebSite.Controllers.CartsController)this.ViewContext.Controller).PositiveUserCartBalans() && (Model.Count() > 0))
+@if (Model.Sum(x => x.Amount) > 0)
 {
-    <div id="cntr">
-        @Html.ActionLink("ЗАКАЗАТЬ", "AddNewOrder", routeValues: null, htmlAttributes: new { @class = "btn btn-success alink1" })
+    <div id="riht">
+        @Html.ActionLink("Очистить корзину", "DeleteUserCart", routeValues: null, htmlAttributes: new { @class = "btn btn-success alink1" })
     </div>
-}
-else
-{
-    <div id="cntr">
-        Для оформления заказа нужно  пополнить ваш баланс
-    </div>
-}
 
+    if (((AutoPartsWebSite.Controllers.CartsController)this.ViewContext.Controller).PositiveUserCartBalans() && (Model.Count() > 0))
+    {
+        <div id="cntr">
+            @Html.ActionLink("ЗАКАЗАТЬ", "AddNewOrder", routeValues: null, htmlAttributes: new { @class = "btn btn-success alink1" })
+        </div>
+    }
+    else
+    {
+        <div id="cntr">
+            Для оформления заказа нужно  пополнить ваш баланс
+        </div>
+    }
+}

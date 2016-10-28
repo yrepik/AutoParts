@@ -361,6 +361,7 @@
     <Content Include="Views\Emails\userChangeOrderItem.cshtml" />
     <Content Include="Views\OrderItemsAdmin\IndexState.cshtml" />
     <Content Include="Views\OrderItemsAdmin\ExcelImportState.cshtml" />
+    <Content Include="Views\OrdersAdmin\DeleteOrderItems.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -374,7 +375,7 @@
     <Content Include="fonts\glyphicons-halflings-regular.woff" />
     <Content Include="fonts\glyphicons-halflings-regular.ttf" />
     <Content Include="fonts\glyphicons-halflings-regular.eot" />
-    <Content Include="Global.asax" />
+    <Content Include="Views\Global.asax" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
     <None Include="Scripts\jquery.validate-vsdoc.js" />
@@ -451,7 +452,7 @@
     <Compile Include="Controllers\RolesAdminController.cs" />
     <Compile Include="Controllers\SuppliersController.cs" />
     <Compile Include="Controllers\UserAdminController.cs" />
-    <Compile Include="Global.asax.cs">
+    <Compile Include="Views\Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Migrations\201605100826507_InitialCreate1.cs" />

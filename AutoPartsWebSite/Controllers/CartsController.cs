@@ -10,6 +10,8 @@ using AutoPartsWebSite.Models;
 using Microsoft.AspNet.Identity;
 using IdentityAutoPart.Models;
 using Microsoft.AspNet.Identity.Owin;
+using OfficeOpenXml;
+using System.IO;
 
 namespace AutoPartsWebSite.Controllers
 {
@@ -170,6 +172,15 @@ namespace AutoPartsWebSite.Controllers
         // GET: Carts        
         public ActionResult Index()
         {
+            if (TempData["shortMessage"] == null)
+            {
+                ViewBag.Message = "";
+            }
+            else
+            {
+                ViewBag.Message = TempData["shortMessage"].ToString();
+            }
+
             string currentUserId = User.Identity.GetUserId();
             var userCart = (from s in db.Carts
                             select s).Take(1000);
@@ -183,6 +194,15 @@ namespace AutoPartsWebSite.Controllers
         [Authorize(Roles = "Admin")]
         public ActionResult IndexAdmin()
         {
+            if (TempData["shortMessage"] == null)
+            {
+                ViewBag.Message = "";
+            }
+            else
+            {
+                ViewBag.Message = TempData["shortMessage"].ToString();
+            }
+
             string currentUserId = User.Identity.GetUserId();
             var userCart = (from s in db.Carts
                             select s).Take(1000);
@@ -532,6 +552,32 @@ namespace AutoPartsWebSite.Controllers
             return ((100 + rate.Value) * Convert.ToDecimal(part.Price) / 100).ToString();
         }
 
+        public ActionResult ExcelExport()
+        {
+            string currentUserId = User.Identity.GetUserId();
+            var userCart = from c in db.Carts
+                            where c.UserId.Equals(currentUserId)
+                            select new {c.Number, c.Brand, c.Details, c.DeliveryTime, c.Price, c.Supplier, c.Amount, c.Reference1, c.Reference2};            
+
+            using (ExcelPackage pck = new ExcelPackage())
+            {
+                ExcelWorksheet ws = pck.Workbook.Worksheets.Add("ALFAPARTS-Cart");
+                ws.Cells["A1"].LoadFromCollection(userCart, true);
+                // ToDo: еще нужно будет добавить русские хидеры
+                Byte[] fileBytes = pck.GetAsByteArray();
+                Response.Clear();
+                Response.Buffer = true;
+                Response.AddHeader("content-disposition", "attachment;filename=ALFAPARTS-Cart.xlsx");
+                // Заменяю имя выходного Эксель файла
+                Response.Charset = "";
+                Response.ContentType = "application/vnd.ms-excel";
+                StringWriter sw = new StringWriter();
+                Response.BinaryWrite(fileBytes);
+                Response.End();
+            }
+            TempData["shortMessage"] = "<br> Экспорт завершен";
+            return RedirectToAction("IndexState");
+        }
         protected override void Dispose(bool disposing)
         {
             if (disposing)
