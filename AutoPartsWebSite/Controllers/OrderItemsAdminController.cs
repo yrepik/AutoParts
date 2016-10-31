@@ -197,7 +197,7 @@ namespace AutoPartsWebSite.Controllers
             }
 
 
-            var user = HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>().FindById(orderItem.UserId);
+            //var user = HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>().FindById(orderItem.UserId);
             // send e-mail to admin
 
             //dynamic adminNewOrder = new Email("adminChangeOrderItem");
@@ -208,12 +208,12 @@ namespace AutoPartsWebSite.Controllers
             //adminNewOrder.Send();
 
             // send e-mail to user
-            dynamic userNewOrder = new Email("userChangeOrderItem");
-            userNewOrder.To = user.Email;
-            userNewOrder.Order = orderItem.OrderId;
-            userNewOrder.OrderItem = orderItem.Id;
-            userNewOrder.OrderItemState = orderItem.State;
-            userNewOrder.Send();
+            //dynamic userNewOrder = new Email("userChangeOrderItem");
+            //userNewOrder.To = user.Email;
+            //userNewOrder.Order = orderItem.OrderId;
+            //userNewOrder.OrderItem = orderItem.Id;
+            //userNewOrder.OrderItemState = orderItem.State;
+            //userNewOrder.Send();
         }
 
         public void SendEmail(OrderItem orderItem)
