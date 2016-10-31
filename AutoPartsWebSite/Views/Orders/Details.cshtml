@@ -6,6 +6,13 @@
 <DIV class="main-text">
 <h1>@ViewBag.Title</h1>
 <h3 id="cntr">Сумма заказа: <span id="red">$@Html.DisplayFor(model => model.Summary)</span></h3>
+    <div class="reg-form">
+        <br>
+        <p>
+            @Html.ActionLink("Экспорт (Excel)", "ExcelExport", new { id = Model.Id })
+        </p>
+    </div>
+    @Html.Raw(ViewBag.Message)
 </DIV>
 
 <table class="table">

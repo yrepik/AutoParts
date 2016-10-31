@@ -145,6 +145,7 @@ namespace AutoPartsWebSite.Controllers
                 return orderItem.State;
             }
         }
+        private List <int> updatedItems { get; set; }
 
         public int setOrderItemState(int id, int newstate)
         {
@@ -169,9 +170,50 @@ namespace AutoPartsWebSite.Controllers
                 db.Entry(orderItem).State = EntityState.Modified;
                 db.SaveChanges();
             }
+            this.updatedItems.Add(id); // add update items id into the list
             // send send an e-mail about order item state changes
-            SendEmail(orderItem);
+            // SendEmail(orderItem);
             return returnValue;
+        }
+
+        public void SendUpdatedItemsEmail()
+        {
+            var orderItemsGroups = from oi in db.OrderItems
+                            where updatedItems.Contains(oi.Id)
+                            group oi by oi.UserId into g
+                            select new
+                            {
+                                Name = g.Key,
+                                Count = g.Count(),
+                                Items = from i in g select i
+                            };
+
+            foreach (var group in orderItemsGroups)
+            {
+                Console.WriteLine("{0} : {1}", group.Name, group.Count);
+                foreach (OrderItem item in group.Items)
+                    Console.WriteLine(item.Name);
+                Console.WriteLine();
+            }
+
+
+            var user = HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>().FindById(orderItem.UserId);
+            // send e-mail to admin
+
+            //dynamic adminNewOrder = new Email("adminChangeOrderItem");
+            //adminNewOrder.To = "admins@alfa-parts.com";
+            //adminNewOrder.Order = orderItem.OrderId;
+            //adminNewOrder.OrderItem = orderItem.Id;
+            //adminNewOrder.OrderItemState = orderItem.State;
+            //adminNewOrder.Send();
+
+            // send e-mail to user
+            dynamic userNewOrder = new Email("userChangeOrderItem");
+            userNewOrder.To = user.Email;
+            userNewOrder.Order = orderItem.OrderId;
+            userNewOrder.OrderItem = orderItem.Id;
+            userNewOrder.OrderItemState = orderItem.State;
+            userNewOrder.Send();
         }
 
         public void SendEmail(OrderItem orderItem)
@@ -179,12 +221,12 @@ namespace AutoPartsWebSite.Controllers
             var user = HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>().FindById(orderItem.UserId);
             // send e-mail to admin
 
-            dynamic adminNewOrder = new Email("adminChangeOrderItem");
-            adminNewOrder.To = "admins@alfa-parts.com";
-            adminNewOrder.Order = orderItem.OrderId;
-            adminNewOrder.OrderItem = orderItem.Id;
-            adminNewOrder.OrderItemState = orderItem.State;
-            adminNewOrder.Send();
+            //dynamic adminNewOrder = new Email("adminChangeOrderItem");
+            //adminNewOrder.To = "admins@alfa-parts.com";
+            //adminNewOrder.Order = orderItem.OrderId;
+            //adminNewOrder.OrderItem = orderItem.Id;
+            //adminNewOrder.OrderItemState = orderItem.State;
+            //adminNewOrder.Send();
 
             // send e-mail to user
             dynamic userNewOrder = new Email("userChangeOrderItem");

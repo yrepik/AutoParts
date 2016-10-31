@@ -60,5 +60,15 @@
             });
             return StateItems;
         }
+
+        public void updateSummary()
+        {
+            decimal sum = 0;
+            foreach (OrderItem oi in this.OrderItems)
+            {
+                sum += (decimal)oi.Total;
+            }
+            this.Summary = sum;
+        }
     }
 }

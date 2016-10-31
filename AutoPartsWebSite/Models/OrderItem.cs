@@ -86,6 +86,17 @@
         [Display(Name = "Статус")]
         public int State { get; set; }
 
+        //[Display(Name = "Статус")]
+        //public string StateText
+        //{
+        //    get
+        //    {
+        //        var itemS = getOrderItemStates();
+        //        string state = this.State.ToString();
+        //        return itemS.Find(x => x.Value.Contains(state)).Text;
+        //    }            
+        //}
+
         [Display(Name = "Стоимость")]
         public decimal? Total { get { return Amount * (Convert.ToDecimal(Price)); } }
 

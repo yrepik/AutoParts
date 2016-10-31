@@ -12,6 +12,8 @@ using IdentityAutoPart.Models;
 using Microsoft.AspNet.Identity.Owin;
 using System.Threading.Tasks;
 using Postal;
+using OfficeOpenXml;
+using System.IO;
 
 namespace AutoPartsWebSite.Controllers
 {
@@ -24,9 +26,17 @@ namespace AutoPartsWebSite.Controllers
         // GET: Orders
         public ActionResult Index()
         {
+            if (TempData["shortMessage"] == null)
+            {
+                ViewBag.Message = "";
+            }
+            else
+            {
+                ViewBag.Message = TempData["shortMessage"].ToString();
+            }
+
             string currentUserId = User.Identity.GetUserId();
             
-
             return View(GetUserOrders(currentUserId));
         }
 
@@ -216,6 +226,34 @@ namespace AutoPartsWebSite.Controllers
             userNewOrder.To = user.Email;
             adminNewOrder.Order = neworder;
             userNewOrder.Send();
+        }
+
+        public ActionResult ExcelExport(int? id)
+        {
+            string currentUserId = User.Identity.GetUserId();
+            var userOrderItems = from oi in db.OrderItems
+                           where    oi.UserId == currentUserId
+                                    && oi.OrderId == id
+                           select new { oi.Id, oi.OrderId, oi.Number, oi.Brand, oi.Details, oi.DeliveryTime, oi.Amount, oi.Price, oi.State, oi.Supplier, oi.Reference1, oi.Reference2 };
+            
+            using (ExcelPackage pck = new ExcelPackage())
+            {                
+                ExcelWorksheet ws = pck.Workbook.Worksheets.Add("ALFAPARTS-Order-"+ id.ToString());
+                ws.Cells["A1"].LoadFromCollection(userOrderItems, true);
+                // ToDo: еще нужно будет добавить русские хидеры
+                Byte[] fileBytes = pck.GetAsByteArray();
+                Response.Clear();
+                Response.Buffer = true;
+                Response.AddHeader("content-disposition", "attachment;filename=ALFAPARTS-Order " + id.ToString() + ".xlsx");
+                // Заменяю имя выходного Эксель файла
+                Response.Charset = "";
+                Response.ContentType = "application/vnd.ms-excel";
+                StringWriter sw = new StringWriter();
+                Response.BinaryWrite(fileBytes);
+                Response.End();
+            }
+            TempData["shortMessage"] = "<br> Экспорт завершен";
+            return RedirectToAction("Index");
         }
 
         protected override void Dispose(bool disposing)

@@ -12,6 +12,8 @@ using IdentityAutoPart.Models;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using Postal;
+using OfficeOpenXml;
+using System.IO;
 
 namespace AutoPartsWebSite.Controllers
 {
@@ -177,11 +179,19 @@ namespace AutoPartsWebSite.Controllers
             return RedirectToAction("Index");
         }
 
-
-        //===================================
+        //=============== OrderItems ====================
 
         public ActionResult IndexOrderItems(int? id)
         {
+            if (TempData["shortMessage"] == null)
+            {
+                ViewBag.Message = "";
+            }
+            else
+            {
+                ViewBag.Message = TempData["shortMessage"].ToString();
+            }
+
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
@@ -219,13 +229,15 @@ namespace AutoPartsWebSite.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]        
-        public ActionResult EditOrderItems([Bind(Include = "Id,OrderId,PartId,UserId,Brand,Number,Name,Details,Size,Weight,Quantity,Price,Supplier,DeliveryTime,Amount,Data,State")] OrderItem orderItem)
+        public ActionResult EditOrderItems([Bind(Include = "Id,OrderId,PartId,UserId,Brand,Number,Name,Details,Size,Weight,Quantity,Price,Supplier,DeliveryTime,Amount,Data,State, Reference1, Reference2")] OrderItem orderItem)
         //public ActionResult EditOrderItems([Bind(Include = "Id,OrderId,PartId,UserId,Brand,Number,Name,Details,Amount,Data,State")] OrderItem orderItem)
         // public ActionResult EditOrderItems([Bind(Include = "Brand,Number,Name,Details,Size,Weight,Quantity,Price,Supplier,DeliveryTime,Amount,Data,State")] OrderItem orderItem)
         {
             if (ModelState.IsValid)
             {
-                db.Entry(orderItem).State = EntityState.Modified;
+                db.Entry(orderItem).State = EntityState.Modified;                
+                Order order = db.Orders.Find(orderItem.OrderId);                 
+                order.updateSummary(); // update order summary
                 SendEmail(db.Orders.Find(orderItem.OrderId)); // send notifications
                 db.SaveChanges();
                 return RedirectToAction("IndexOrderItems", new { id = orderItem.OrderId });
@@ -255,29 +267,12 @@ namespace AutoPartsWebSite.Controllers
         public ActionResult DeleteOrderItemsConfirmed(int id)
         {
             OrderItem orderItem = db.OrderItems.Find(id);
-            int orderId = orderItem.OrderId;
-            Order order = db.Orders.Find(id);
+            Order order = db.Orders.Find(orderItem.OrderId);
             db.OrderItems.Remove(orderItem);
+            order.updateSummary();
+            SendEmail(db.Orders.Find(orderItem.OrderId)); // send notifications
             db.SaveChanges();                      
             return RedirectToAction("Index");
-        }
-
-
-        public void SendEmail(Order neworder)
-        {
-            var user = HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>().FindById(neworder.UserId);
-
-            // send new order e-mail to admin
-            dynamic adminNewOrder = new Email("adminChangeOrder");
-            adminNewOrder.To = "admins@alfa-parts.com";
-            adminNewOrder.Order = neworder.Id;
-            adminNewOrder.Send();
-
-            // send new order e-mail to user
-            dynamic userNewOrder = new Email("userChangeOrder");
-            userNewOrder.To = user.Email;
-            adminNewOrder.Order = neworder;
-            userNewOrder.Send();
         }
 
         public int GetOrderItemsCont(int id)
@@ -297,7 +292,53 @@ namespace AutoPartsWebSite.Controllers
 
             return orderItems.Count();
         }
-                
+
+        public ActionResult ExcelExport(int? id)
+        {
+            string currentUserId = User.Identity.GetUserId();
+            var userOrderItems = from oi in db.OrderItems
+                                 where oi.OrderId == id
+                                 select new { oi.Id, oi.OrderId, oi.Number, oi.Brand, oi.Details, oi.DeliveryTime, oi.Amount, oi.Price, oi.State, oi.Supplier, oi.Reference1, oi.Reference2 };
+
+            using (ExcelPackage pck = new ExcelPackage())
+            {
+                ExcelWorksheet ws = pck.Workbook.Worksheets.Add("ALFAPARTS-Order-" + id.ToString());
+                ws.Cells["A1"].LoadFromCollection(userOrderItems, true);
+                // ToDo: еще нужно будет добавить русские хидеры
+                Byte[] fileBytes = pck.GetAsByteArray();
+                Response.Clear();
+                Response.Buffer = true;
+                Response.AddHeader("content-disposition", "attachment;filename=ALFAPARTS-Order " + id.ToString() + ".xlsx");
+                // Заменяю имя выходного Эксель файла
+                Response.Charset = "";
+                Response.ContentType = "application/vnd.ms-excel";
+                StringWriter sw = new StringWriter();
+                Response.BinaryWrite(fileBytes);
+                Response.End();
+            }
+            TempData["shortMessage"] = "<br> Экспорт завершен";
+            return RedirectToAction("Index");
+        }
+        //========end======= OrderItems =======end=============
+
+        public void SendEmail(Order neworder)
+        {
+            var user = HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>().FindById(neworder.UserId);
+
+            // send new order e-mail to admin
+            dynamic adminNewOrder = new Email("adminChangeOrder");
+            adminNewOrder.To = "admins@alfa-parts.com";
+            adminNewOrder.Order = neworder.Id;
+            adminNewOrder.Send();
+
+            // send new order e-mail to user
+            dynamic userNewOrder = new Email("userChangeOrder");
+            userNewOrder.To = user.Email;
+            adminNewOrder.Order = neworder;
+            userNewOrder.Send();
+        }
+
+
         protected override void Dispose(bool disposing)
         {
             if (disposing)
