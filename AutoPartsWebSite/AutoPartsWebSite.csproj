@@ -362,6 +362,7 @@
     <Content Include="Views\OrderItemsAdmin\IndexState.cshtml" />
     <Content Include="Views\OrderItemsAdmin\ExcelImportState.cshtml" />
     <Content Include="Views\OrdersAdmin\DeleteOrderItems.cshtml" />
+    <Content Include="Views\Emails\userChangeOrderItemGroup.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

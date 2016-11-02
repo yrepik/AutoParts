@@ -146,6 +146,13 @@
             return StateItems;
         }
 
+        public string getStateName()
+        {
+            var itemS = getOrderItemStates();
+            string state = this.State.ToString();
+            return itemS.Find(x => x.Value.Contains(state)).Text;         
+        }
+
         [Display(Name = "Заказчик")]
         [StringLength(128)]
         public string UserName

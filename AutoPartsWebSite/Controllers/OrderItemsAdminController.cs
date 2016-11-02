@@ -190,10 +190,20 @@ namespace AutoPartsWebSite.Controllers
 
             foreach (var group in orderItemsGroups)
             {
-                Console.WriteLine("{0} : {1}", group.Name, group.Count);
-                foreach (OrderItem item in group.Items)
-                    Console.WriteLine(item.Name);
-                Console.WriteLine();
+                //Console.WriteLine("{0} : {1}", group.Name, group.Count);
+                //foreach (OrderItem item in group.Items)
+                //    Console.WriteLine(item.Name);
+                //Console.WriteLine();
+
+                var user = HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>().FindById(group.Items.FirstOrDefault().UserId);
+                // send e-mail to user
+                dynamic userChangeOrderItemGroup = new Email("userChangeOrderItemGroup");
+                userChangeOrderItemGroup.To = user.Email;
+                //userNewOrder.Order = orderItem.OrderId;
+                userChangeOrderItemGroup.OrderItems = group.Items;
+
+                //userNewOrder.OrderItemState = orderItem.State;
+                userChangeOrderItemGroup.Send();
             }
 
 
@@ -298,6 +308,7 @@ namespace AutoPartsWebSite.Controllers
                     using (ExcelPackage package = new ExcelPackage(upload.InputStream))
                     {
                         ExcelWorksheet worksheet = package.Workbook.Worksheets.FirstOrDefault();
+                        this.updatedItems = new List<int> { };
                         for (int i = firstDataRow; i <= worksheet.Dimension.End.Row; i++)
                         {
                             orderItemId = Convert.ToInt32(worksheet.Cells["A" + i.ToString()].Value.ToString());
@@ -310,6 +321,7 @@ namespace AutoPartsWebSite.Controllers
                         }
                     }
                     TempData["shortMessage"] = infoMessage + "<br> Импорт завершен.";
+                    SendUpdatedItemsEmail();
                 }
                 return RedirectToAction("IndexState");
             }
