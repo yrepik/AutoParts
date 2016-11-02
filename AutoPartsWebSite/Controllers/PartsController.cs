@@ -12,6 +12,7 @@ using System.IO;
 using Microsoft.AspNet.Identity;
 using IdentityAutoPart.Models;
 using Microsoft.AspNet.Identity.Owin;
+using System.Text.RegularExpressions;
 
 namespace AutoPartsWebSite.Controllers
 {
@@ -195,6 +196,12 @@ namespace AutoPartsWebSite.Controllers
                 string[] delimiters = { Environment.NewLine, ".", ",", ";", " " }; //new Char[] { '\n', '\r' }
                 autopartNumbersList = autopartNumbers.Split(delimiters, StringSplitOptions.RemoveEmptyEntries); // StringSplitOptions.None
 
+                // remove all non alphanumeric characters from a string                               
+                for (int i = 0; i < autopartNumbersList.Count(); i++)
+                {
+                    autopartNumbersList[i] = Regex.Replace(autopartNumbersList[i], @"[^A-Za-z0-9]+", "");
+                }
+
                 var numbersList = new List<string>(autopartNumbersList);
 
                 // two digits for search item message
@@ -369,6 +376,12 @@ namespace AutoPartsWebSite.Controllers
             {
                 string[] delimiters = { Environment.NewLine, ".", ",", ";", " " }; //new Char[] { '\n', '\r' }
                 autopartNumbersList = autopartNumbers.Split(delimiters, StringSplitOptions.RemoveEmptyEntries); // StringSplitOptions.None
+
+                // remove all non alphanumeric characters from a string                               
+                for (int i = 0; i < autopartNumbersList.Count(); i++)
+                {
+                    autopartNumbersList[i] = Regex.Replace(autopartNumbersList[i], @"[^A-Za-z0-9]+", "");
+                }
 
                 var numbersList = new List<string>(autopartNumbersList);
 
@@ -715,6 +728,12 @@ namespace AutoPartsWebSite.Controllers
             {
                 string[] delimiters = { Environment.NewLine, ".", ",", ";", " " }; //new Char[] { '\n', '\r' }
                 autopartNumbersList = autopartNumbers.Split(delimiters, StringSplitOptions.RemoveEmptyEntries); // StringSplitOptions.None
+
+                // remove all non alphanumeric characters from a string                               
+                for (int i = 0; i < autopartNumbersList.Count(); i++)
+                {
+                    autopartNumbersList[i] = Regex.Replace(autopartNumbersList[i], @"[^A-Za-z0-9]+", "");
+                }
 
                 var numbersList = new List<string>(autopartNumbersList);
 
