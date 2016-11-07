@@ -75,9 +75,23 @@
                     @Html.DisplayFor(modelItem => item.UserName)
                 </td>
                 <td>
-                    @Html.ActionLink("Изменить", "Edit", new { id = item.Id }) |
-                    @Html.ActionLink("Распределить", "IndexInvoiceItems", new { id = item.Id }) |
-                    @Html.ActionLink("Удалить", "Delete", new { id = item.Id })
+                    
+                    @Html.ActionLink("Изменить", "Edit", new { id = item.Id })                    
+                    @if (item.State < 2) // distributed
+                    {
+                        @Html.Raw(" | ")
+                        @Html.ActionLink("Распределить", "Distribute", new { id = item.Id })                    
+                    }
+                    @if (item.State >= 2) // distributed
+                    {
+                        @Html.Raw(" | ")
+                        @Html.ActionLink("Просмотр", "IndexInvoiceItems", new { id = item.Id })
+                    }
+                    @if (item.State != 3) // closed
+                    {
+                        @Html.Raw(" | ")
+                        @Html.ActionLink("Удалить", "Delete", new { id = item.Id })                        
+                    }
                 </td>
             </tr>
         }

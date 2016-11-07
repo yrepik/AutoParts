@@ -75,14 +75,9 @@
             });
             StateItems.Add(new SelectListItem
             {
-                Text = "Распределен частично",
-                Value = "3"
-            });
-            StateItems.Add(new SelectListItem
-            {
                 Text = "Закрыт",
-                Value = "4"
-            });
+                Value = "3"
+            });           
             return StateItems;
         }
 

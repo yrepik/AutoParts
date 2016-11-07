@@ -288,6 +288,34 @@ namespace AutoPartsWebSite.Controllers
             return RedirectToAction("IndexInvoiceItems", new { id = id });            
         }
 
+        public ActionResult Distribute(int? id)
+        {
+            if (id == null)
+            {
+                RedirectToAction("Index");
+            }
+
+            Invoice invoice = db.Invoices.Find(id);
+            if (invoice == null)
+            {
+                RedirectToAction("Index");
+            }
+            if (invoice.State == 1) // loaded
+            { 
+                var invoiceItems = db.InvoiceItems.Include(o => o.Invoice)
+                    .Where(o => o.Invoice.Id == id);
+                foreach (InvoiceItem iItem in invoiceItems)
+                {
+                    if (DistributeInvoiceItem(iItem.Id))
+                    {
+                        invoice.State = 2;  // distributed
+                    }
+                }
+                db.SaveChanges();
+            }
+            return RedirectToAction("IndexInvoiceItems", new { id = id });
+        }
+
         public ActionResult IndexInvoiceItems(int? id)
         {
             if (id == null)
@@ -303,6 +331,7 @@ namespace AutoPartsWebSite.Controllers
             {
                 return HttpNotFound();
             }
+
             ViewBag.CurrentInvoice = invoice;
             return View(invoiceItems.ToList());
         }
