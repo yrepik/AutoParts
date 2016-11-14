@@ -9,6 +9,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
+using Postal;
 
 namespace IdentityAutoPart.Controllers
 {
@@ -168,7 +169,7 @@ namespace IdentityAutoPart.Controllers
                 {
                     var code = await UserManager.GenerateEmailConfirmationTokenAsync(user.Id);
                     var callbackUrl = Url.Action("ConfirmEmail", "Account", new { userId = user.Id, code = code }, protocol: Request.Url.Scheme);
-                    await UserManager.SendEmailAsync(user.Id, "Подтвердите вашу учетную запись", "Пожалуйста, подтвердите вашу учетную запись нажав по  <a href=\"" + callbackUrl + "\">ссылке</a>");
+                    await UserManager.SendEmailAsync(user.Id, "Подтвердите вашу учетную запись", "Пожалуйста, подтвердите вашу учетную запись нажав по  <a href=\"" + callbackUrl + "\">ссылке</a><br>"+ "В ближайшее время Администрация сайта свяжется с Вами. После обсуждения условий сотрудничества Вы получите доступ к остальным модулям сайта.");
 
                     // This should not be deployed in production:
                     // ViewBag.Link = callbackUrl;
@@ -191,7 +192,23 @@ namespace IdentityAutoPart.Controllers
                 return View("Error");
             }
             var result = await UserManager.ConfirmEmailAsync(userId, code);
+            if (result.Succeeded) // send an email to admin
+            {
+                SendEmail(userId);
+            }
             return View(result.Succeeded ? "ConfirmEmail" : "Error");
+        }
+
+        public void SendEmail(string userId)
+        {
+            var newUserUrl = Url.Action("Details", "UsersAdmin", new { id = userId }, protocol: Request.Url.Scheme);           
+
+            // send new order e-mail to admin
+            dynamic adminNewUser = new Email("adminNewUser");
+            adminNewUser.To = "admins@alfa-parts.com";
+            adminNewUser.userId = userId;
+            adminNewUser.userURL = newUserUrl;
+            adminNewUser.Send();            
         }
 
         //
