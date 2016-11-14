@@ -1,5 +1,5 @@
 ﻿namespace AutoPartsWebSite.Models
-{
+{    
     using System;
     using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
@@ -24,6 +24,21 @@
         [ForeignKey("Invoice")]
         [Required]
         public int InvoiceId { get; set; }
+
+        //[Display(Name = "Статус инвойса")]
+        //public int InvoiceState
+        //{
+        //    get
+        //    {
+        //        InvoiceModel db = new InvoiceModel();
+        //        Invoice invoice = db.Invoices.Find(InvoiceId);
+        //        if (invoice == null)
+        //        {
+        //            return 0;
+        //        }
+        //        return invoice.State;
+        //    }
+        //}
 
         [Display(Name = "Номер")]
         public string Number { get; set; }
@@ -72,14 +87,9 @@
             });
             StateItems.Add(new SelectListItem
             {
-                Text = "Распределен частично",
-                Value = "3"
-            });
-            StateItems.Add(new SelectListItem
-            {
                 Text = "Закрыт",
-                Value = "4"
-            });
+                Value = "3"
+            });            
             return StateItems;
         }
 

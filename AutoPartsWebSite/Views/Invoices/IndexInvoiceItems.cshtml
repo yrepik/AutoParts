@@ -12,9 +12,22 @@
     @Html.ActionLink("ПЕРЕ-РАСПРЕДЕЛИТЬ", "Distribution", new { id = Model.FirstOrDefault().InvoiceId })
 </div>*@	
 
-@*<div class="alink2" id="cntr">
-    @Html.ActionLink("Разместить по заказам", "Distribution", new { id = Model.FirstOrDefault().InvoiceId })
-</div*@>	
+@{
+    bool allDistributed = true;
+    foreach (var item in Model) 
+    {
+        if (item.Rest != 0 )
+        {
+            allDistributed = false;
+        }
+    }
+}
+@if (allDistributed && (ViewBag.CurrentInvoice.State !=3)) // all distributed and closed state
+{
+    <div class="alink2" id="cntr">
+        @Html.ActionLink("Разместить по заказам", "PlaceDistribution", new { id = Model.FirstOrDefault().InvoiceId })
+    </div>	
+}
 
 <table class="table">
     <tr>

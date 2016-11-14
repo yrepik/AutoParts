@@ -30,6 +30,27 @@
 
             }
         }
+
+        //[Display(Name = "Статус инвойса")]
+        //public int invoiceState
+        //{
+        //    get
+        //    {
+        //        InvoiceModel db = new InvoiceModel();
+        //        InvoiceItem invoiceItem = db.InvoiceItems.Find(InvoiceItemId);
+        //        if (invoiceItem == null)
+        //        {
+        //            return 0;
+        //        }
+        //        Invoice invoice = db.Invoices.Find(invoiceItem.InvoiceId);
+        //        if (invoice == null)
+        //        {
+        //            return 0;
+        //        }
+        //        return invoice.State;
+        //    }
+        //}
+
         [Display(Name = "Номер позиции инвойса")]
         public int InvoiceItemId { get; set; }
 

@@ -11,6 +11,9 @@ using Microsoft.AspNet.Identity;
 using System.IO;
 using OfficeOpenXml;
 using PagedList;
+using Postal;
+using Microsoft.AspNet.Identity.Owin;
+using IdentityAutoPart.Models;
 
 namespace AutoPartsWebSite.Controllers
 {
@@ -288,6 +291,49 @@ namespace AutoPartsWebSite.Controllers
             return RedirectToAction("IndexInvoiceItems", new { id = id });            
         }
 
+        private List<int> updatedOrderItems { get; set; }
+
+        // DO: Distribution
+        public ActionResult PlaceDistribution(int? id)
+        {
+            if (id == null)
+            {
+                RedirectToAction("Index");
+            }
+
+            Invoice invoice = db.Invoices.Find(id);
+            if (invoice == null)
+            {
+                RedirectToAction("Index");
+            }
+
+            var invoiceItems = db.InvoiceItems.Include(o => o.Invoice)
+               .Where(o => o.Invoice.Id == id);
+            this.updatedOrderItems = new List<int> { };
+            foreach (InvoiceItem iItem in invoiceItems)
+            {
+                var invDistrItems = from d in db.InvoiceDistributions where d.InvoiceItemId == iItem.Id select d;
+                foreach (var invDistrItem in invDistrItems)
+                {
+                    OrderItem orderItem = db.OrderItems.Find(invDistrItem.OrderItemId);
+                    if (orderItem != null)
+                    {
+                        orderItem.State = 5;    // set Ready state
+                        this.updatedOrderItems.Add(orderItem.Id);
+                    }
+                }
+            }
+
+            if (ModelState.IsValid)
+            {
+                invoice.State = 3; // set closed state
+                db.Entry(invoice).State = EntityState.Modified;
+                db.SaveChanges();
+            }
+            SendUpdatedOrderItemsEmail(); // send notifications to users
+            return RedirectToAction("IndexInvoiceItems", new { id = id });
+        }        
+
         public ActionResult Distribute(int? id)
         {
             if (id == null)
@@ -409,9 +455,17 @@ namespace AutoPartsWebSite.Controllers
             }
             var invoiceDistributions = from c in db.InvoiceDistributions where c.InvoiceItemId == id select c;
 
+            InvoiceItem invoiceItem = db.InvoiceItems.Find(id);
+            if (invoiceItem == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+
             ViewBag.InvoiceDistributionsCount = invoiceDistributions.Count();
             ViewBag.invoiceItemRest = invoiceItemRest;
             ViewBag.InvoiceItemId = id;
+            ViewBag.InvoiceState = invoiceItem.Invoice.State;
+
             return PartialView(invoiceDistributions.ToList());
         }
 
@@ -532,6 +586,59 @@ namespace AutoPartsWebSite.Controllers
             return View(invoiceDistribution);
         }
 
+
+
+       
+
+        public int setOrderItemState(int id, int newstate)
+        {
+            int returnValue = 0;
+
+            OrderItem orderItem = db.OrderItems.Find(id);
+            if (orderItem == null)
+            {
+                return returnValue;
+            }
+
+            if (orderItem.State == newstate)
+            {
+                return returnValue;
+            }
+
+            returnValue = (orderItem.State < newstate) ? 1 : -1;
+
+            if (ModelState.IsValid)
+            {
+                orderItem.State = newstate;
+                db.Entry(orderItem).State = EntityState.Modified;
+                db.SaveChanges();
+            }
+            this.updatedOrderItems.Add(id); // add update items id into the list            
+            return returnValue;
+        }
+
+        public void SendUpdatedOrderItemsEmail()
+        {
+            var orderItemsGroups = from oi in db.OrderItems
+                                   where updatedOrderItems.Contains(oi.Id)
+                                   group oi by oi.UserId into g
+                                   select new
+                                   {
+                                       Name = g.Key,
+                                       Count = g.Count(),
+                                       Items = from i in g select i
+                                   };
+
+            foreach (var group in orderItemsGroups)
+            {
+                var user = HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>().FindById(group.Items.FirstOrDefault().UserId);
+                // send e-mail to user
+                dynamic userChangeOrderItemGroup = new Email("userChangeOrderItemGroup");
+                userChangeOrderItemGroup.To = user.Email;
+                userChangeOrderItemGroup.OrderItems = group.Items;
+                userChangeOrderItemGroup.Send();
+            }
+        }
 
         protected override void Dispose(bool disposing)
         {

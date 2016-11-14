@@ -11,7 +11,10 @@
         <th>
             @if ((ViewBag.InvoiceDistributionsCount >= 0) && (ViewBag.invoiceItemRest > 0))
             {
-                @Html.ActionLink("+", "CreateInvoiceDistribution", new { id = ViewBag.InvoiceItemId })
+                if (ViewBag.InvoiceState != 3) // not closed
+                {
+                    @Html.ActionLink("+", "CreateInvoiceDistribution", new { id = ViewBag.InvoiceItemId })
+                }
             }
         </th>
     </tr>
@@ -27,7 +30,10 @@
             </td>
             <td>
                 @*@Html.ActionLink("E", "EditInvoiceDistribution", new { id = item.Id, invoiceId = item.invoiceId, invoiceItemId = item.InvoiceItemId }) |*@
-                @Html.ActionLink("X", "DeleteInvoiceDistribution", new { id = item.Id })
+                @if (ViewBag.InvoiceState != 3) // not closed
+                {
+                    @Html.ActionLink("X", "DeleteInvoiceDistribution", new { id = item.Id })
+                }
              </td>                  
         </tr>
     }
