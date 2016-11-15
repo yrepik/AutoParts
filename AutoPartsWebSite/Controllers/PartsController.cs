@@ -434,6 +434,7 @@ namespace AutoPartsWebSite.Controllers
                                      SupplierId = p.SupplierId
                                  }
                                  ).ToList()
+                                 .OrderBy(ap => ap.Price)
                                  .Select(x => new Part
                                  {
                                      Id = x.Id,
@@ -793,6 +794,7 @@ namespace AutoPartsWebSite.Controllers
                                      SupplierId = p.SupplierId
                                  }
                                  ).ToList()
+                                 .OrderBy(ap => ap.Price)
                                  .Select(x => new Part
                                  {
                                      Id = x.Id,
