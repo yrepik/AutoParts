@@ -488,7 +488,8 @@ namespace AutoPartsWebSite.Controllers
                               where searchNumbers.Contains(p.Number)
                               select p;
                     aps = aps.Where(p => p.Brand.Contains(sc.Brand));                 
-                    aps = aps.OrderByDescending(p => p.Price); // sort by price
+                    //aps = aps.OrderByDescending(p => p.Price); // sort by price
+                    aps = aps.OrderBy(p => p.Price); // sort by price
                     if (aps != null)
                     {
                         foreach (Part ap in aps)
@@ -848,7 +849,8 @@ namespace AutoPartsWebSite.Controllers
                               where searchNumbers.Contains(p.Number)
                               select p;
                     aps = aps.Where(p => p.Brand.Contains(sc.Brand));
-                    aps = aps.OrderByDescending(p => p.Price); // sort by price
+                    // aps = aps.OrderByDescending(p => p.Price); // sort by price
+                    aps = aps.OrderBy(p => p.Price); // sort by price
                     if (aps != null)
                     {
                         foreach (Part ap in aps)
