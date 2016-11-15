@@ -210,6 +210,7 @@ namespace AutoPartsWebSite.Controllers
                 return HttpNotFound();
             }
 
+            ViewBag.CurrentOrder = db.Orders.Find(id);
             return View(orderItems.ToList());
         }
 
