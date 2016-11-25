@@ -201,6 +201,9 @@ namespace AutoPartsWebSite.Controllers
                 userChangeOrderItemGroup.To = user.Email;
                 //userNewOrder.Order = orderItem.OrderId;
                 userChangeOrderItemGroup.OrderItems = group.Items;
+                userChangeOrderItemGroup.OrderId = group.Items.FirstOrDefault().Order.Id;
+                userChangeOrderItemGroup.OrderDate = group.Items.FirstOrDefault().Order.Data;
+                userChangeOrderItemGroup.OrderSummary = group.Items.FirstOrDefault().Order.Summary;
 
                 //userNewOrder.OrderItemState = orderItem.State;
                 userChangeOrderItemGroup.Send();
@@ -239,12 +242,14 @@ namespace AutoPartsWebSite.Controllers
             //adminNewOrder.Send();
 
             // send e-mail to user
-            dynamic userNewOrder = new Email("userChangeOrderItem");
-            userNewOrder.To = user.Email;
-            userNewOrder.Order = orderItem.OrderId;
-            userNewOrder.OrderItem = orderItem.Id;
-            userNewOrder.OrderItemState = orderItem.State;
-            userNewOrder.Send();
+            dynamic userChangeOrderItem = new Email("userChangeOrderItem");
+            userChangeOrderItem.To = user.Email;
+            userChangeOrderItem.OrderId = orderItem.OrderId;
+            userChangeOrderItem.OrderDate = orderItem.Order.Data;
+            userChangeOrderItem.OrderSummary = orderItem.Order.Summary;
+            userChangeOrderItem.OrderItem = orderItem.Id;
+            userChangeOrderItem.OrderItemState = orderItem.State;
+            userChangeOrderItem.Send();
         }
 
         public ActionResult IndexState()

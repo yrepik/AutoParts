@@ -297,9 +297,46 @@ namespace AutoPartsWebSite.Controllers
         public ActionResult ExcelExport(int? id)
         {
             string currentUserId = User.Identity.GetUserId();
-            var userOrderItems = from oi in db.OrderItems
+            var usrOrderItems = (from oi in db.OrderItems
+                                 where oi.OrderId == id
+                                 select new
+                                 {   Id = oi.Id,
+                                     OrderId = oi.OrderId,
+                                     Number = oi.Number,
+                                     Brand = oi.Brand,
+                                     Details = oi.Details,
+                                     DeliveryTime = oi.DeliveryTime,
+                                     Amount = oi.Amount,
+                                     Price = oi.Price,
+                                     State = oi.State,
+                                     Supplier = oi.Supplier,
+                                     Reference1 = oi.Reference1,
+                                     Reference2 = oi.Reference2
+                                 }
+                                 ).ToList()
+                                 .Select(x => new OrderItem
+                                 {
+                                     Id = x.Id,
+                                     OrderId = x.OrderId,
+                                     Number = x.Number,
+                                     Brand = x.Brand,
+                                     Details = x.Details,
+                                     DeliveryTime = x.DeliveryTime,
+                                     Amount = x.Amount,
+                                     Price = Math.Round(Convert.ToDecimal(x.Price), 2).ToString(),
+                                     State = x.State,
+                                     Supplier = x.Supplier,
+                                     Reference1 = x.Reference1,
+                                     Reference2 = x.Reference2
+                                 });
+            var userOrderItems = from oi in usrOrderItems
                                  where oi.OrderId == id
                                  select new { oi.Id, oi.OrderId, oi.Number, oi.Brand, oi.Details, oi.DeliveryTime, oi.Amount, oi.Price, oi.State, oi.Supplier, oi.Reference1, oi.Reference2 };
+
+            //foreach (OrderItem uoi in userOrderItems)
+            //{
+            //    uoi.Price = Math.Round(Convert.ToDecimal(uoi.Price), 2).ToString();
+            //}
 
             using (ExcelPackage pck = new ExcelPackage())
             {
@@ -317,7 +354,7 @@ namespace AutoPartsWebSite.Controllers
                 Response.BinaryWrite(fileBytes);
                 Response.End();
             }
-            TempData["shortMessage"] = "<br> Экспорт завершен";
+            // TempData["shortMessage"] = "<br> Экспорт завершен";
             return RedirectToAction("Index");
         }
         //========end======= OrderItems =======end=============
@@ -327,16 +364,20 @@ namespace AutoPartsWebSite.Controllers
             var user = HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>().FindById(neworder.UserId);
 
             // send new order e-mail to admin
-            dynamic adminNewOrder = new Email("adminChangeOrder");
-            adminNewOrder.To = "admins@alfa-parts.com";
-            adminNewOrder.Order = neworder.Id;
-            adminNewOrder.Send();
+            dynamic adminChangeOrder = new Email("adminChangeOrder");
+            adminChangeOrder.To = "admins@alfa-parts.com";
+            adminChangeOrder.OrderId = neworder.Id;
+            adminChangeOrder.OrderDate = neworder.Data;
+            adminChangeOrder.OrderSummary = neworder.Summary;
+            adminChangeOrder.Send();
 
             // send new order e-mail to user
-            dynamic userNewOrder = new Email("userChangeOrder");
-            userNewOrder.To = user.Email;
-            adminNewOrder.Order = neworder;
-            userNewOrder.Send();
+            dynamic userChangeOrder = new Email("userChangeOrder");
+            userChangeOrder.To = user.Email;
+            userChangeOrder.OrderId = neworder.Id;
+            userChangeOrder.OrderDate = neworder.Data;
+            userChangeOrder.OrderSummary = neworder.Summary;
+            userChangeOrder.Send();
         }
 
 

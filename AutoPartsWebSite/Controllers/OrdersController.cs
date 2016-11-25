@@ -218,13 +218,17 @@ namespace AutoPartsWebSite.Controllers
             // send new order e-mail to admin
             dynamic adminNewOrder = new Email("adminNewOrder");
             adminNewOrder.To = "admins@alfa-parts.com";
-            adminNewOrder.Order = neworder.Id;
+            adminNewOrder.OrderId = neworder.Id;
+            adminNewOrder.OrderDate = neworder.Data;
+            adminNewOrder.OrderSummary = neworder.Summary;
             adminNewOrder.Send();
 
             // send new order e-mail to user
             dynamic userNewOrder = new Email("userNewOrder");
             userNewOrder.To = user.Email;
-            adminNewOrder.Order = neworder;
+            userNewOrder.OrderId = neworder.Id;
+            userNewOrder.OrderDate = neworder.Data;
+            userNewOrder.OrderSummary = neworder.Summary;
             userNewOrder.Send();
         }
 

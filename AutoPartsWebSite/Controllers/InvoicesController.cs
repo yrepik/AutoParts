@@ -636,6 +636,9 @@ namespace AutoPartsWebSite.Controllers
                 dynamic userChangeOrderItemGroup = new Email("userChangeOrderItemGroup");
                 userChangeOrderItemGroup.To = user.Email;
                 userChangeOrderItemGroup.OrderItems = group.Items;
+                userChangeOrderItemGroup.OrderId = group.Items.FirstOrDefault().Order.Id;
+                userChangeOrderItemGroup.OrderDate = group.Items.FirstOrDefault().Order.Data;
+                userChangeOrderItemGroup.OrderSummary = group.Items.FirstOrDefault().Order.Summary;
                 userChangeOrderItemGroup.Send();
             }
         }

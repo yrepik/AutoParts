@@ -185,6 +185,7 @@ namespace AutoPartsWebSite.Controllers
             var userCart = (from s in db.Carts
                             select s).Take(1000);
             userCart = userCart.Where(s => s.UserId.Equals(currentUserId));
+            
             ViewBag.CartTotal = GetTotal();
             ViewBag.CartCount = Convert.ToString(GetCount());
 
@@ -261,6 +262,7 @@ namespace AutoPartsWebSite.Controllers
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
             Cart cart = db.Carts.Find(id);
+            cart.Price = Math.Round(Convert.ToDecimal(cart.Price), 2).ToString();            
             if (cart == null)
             {
                 return HttpNotFound();
@@ -555,8 +557,35 @@ namespace AutoPartsWebSite.Controllers
         public ActionResult ExcelExport()
         {
             string currentUserId = User.Identity.GetUserId();
-            var userCart = from c in db.Carts
-                            where c.UserId.Equals(currentUserId)
+
+            var usrCart = (from c in db.Carts
+                           where c.UserId.Equals(currentUserId)
+                           select new
+                                 {
+                                    Number = c.Number,
+                                    Brand = c.Brand,
+                                    Details = c.Details,
+                                    DeliveryTime = c.DeliveryTime,
+                                    Price = c.Price,
+                                    Supplier = c.Supplier,
+                                    Amount = c.Amount,
+                                    Reference1 = c.Reference1,
+                                    Reference2 = c.Reference2
+                                 }
+                                 ).ToList()
+                                 .Select(x => new Cart
+                                 {
+                                     Number = x.Number,
+                                     Brand = x.Brand,
+                                     Details = x.Details,
+                                     DeliveryTime = x.DeliveryTime,
+                                     Price = Math.Round(Convert.ToDecimal(x.Price), 2).ToString(),
+                                     Supplier = x.Supplier,
+                                     Amount = x.Amount,
+                                     Reference1 = x.Reference1,
+                                     Reference2 = x.Reference2                                     
+                                 });            
+            var userCart = from c in usrCart
                             select new {c.Number, c.Brand, c.Details, c.DeliveryTime, c.Price, c.Supplier, c.Amount, c.Reference1, c.Reference2};            
 
             using (ExcelPackage pck = new ExcelPackage())
@@ -575,7 +604,7 @@ namespace AutoPartsWebSite.Controllers
                 Response.BinaryWrite(fileBytes);
                 Response.End();
             }
-            TempData["shortMessage"] = "<br> Экспорт завершен";
+            // TempData["shortMessage"] = "<br> Экспорт завершен";
             return RedirectToAction("IndexState");
         }
         protected override void Dispose(bool disposing)
