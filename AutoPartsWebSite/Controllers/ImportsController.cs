@@ -10,10 +10,14 @@ using AutoPartsWebSite.Models;
 using Microsoft.AspNet.Identity;
 using OfficeOpenXml;
 using System.IO;
-
+using LINQtoCSV;
 
 namespace AutoPartsWebSite.Controllers
 {
+    internal class CSVDataRow : List<DataRowItem>, IDataRow
+    {
+    }
+
     [Authorize(Roles = "Admin")]
     public class ImportsController : Controller
     {
@@ -81,8 +85,8 @@ namespace AutoPartsWebSite.Controllers
                     // store data into DB
                     db.Imports.Add(import);
                     db.SaveChanges();
-                    // toDo: parse data from XSLT file and store it into DB
-                    if (LoadImportDataTEST(import.Id))
+                    // toDo: parse data from XSLX file and store it into DB
+                    if (LoadImportData(import.Id, Path.GetExtension(import.FileName)))
                     {                        
                         TempData["shortMessage"] = "Импорт завершен."; 
                         return RedirectToAction("Index");                     
@@ -174,49 +178,63 @@ namespace AutoPartsWebSite.Controllers
             }
             return suplliersList;
         }
-        private bool LoadImportData(int ImportId)
+        //private bool LoadImportData(int ImportId)
+        //{
+        //    try
+        //    {                
+        //        Import import = db.Imports.Find(ImportId);
+        //        Supplier supplier = db.Suppliers.Find(import.SupplierId);
+        //        ImportTemplate importTemplate = db.ImportTemplates.Find(supplier.ImportTemplateId);
+        //        FileInfo autopartsFile = new FileInfo(Server.MapPath("~/ImportFiles/" + import.FileName));
+        //        int firstDataRow = importTemplate.StartRow;
+
+        //        using (ExcelPackage package = new ExcelPackage(autopartsFile))
+        //        {
+        //            ExcelWorksheet worksheet = package.Workbook.Worksheets.FirstOrDefault();
+        //            for (int i = firstDataRow; i < worksheet.Dimension.End.Row; i++)
+        //            {
+        //                Part part = new Part
+        //                {
+        //                    ImportId = import.Id,
+        //                    Brand = worksheet.Cells[importTemplate.BrandColumn + i.ToString()].Value.ToString(),
+        //                    Number = worksheet.Cells[importTemplate.NumberColumn + i.ToString()].Value.ToString(),
+        //                    Name = worksheet.Cells[importTemplate.NameColumn + i.ToString()].Value.ToString(),
+        //                    Details = worksheet.Cells[importTemplate.DetailsColumn + i.ToString()].Value.ToString(),
+        //                    Size = worksheet.Cells[importTemplate.SizeColumn + i.ToString()].Value.ToString(),
+        //                    Weight = worksheet.Cells[importTemplate.WeightColumn + i.ToString()].Value.ToString(),
+        //                    Quantity = worksheet.Cells[importTemplate.QuantityColumn + i.ToString()].Value.ToString(),
+        //                    Price = worksheet.Cells[importTemplate.PriceColumn + i.ToString()].Value.ToString(),
+        //                    SupplierId = Convert.ToInt32(import.SupplierId)
+        //                };
+        //                db.Parts.Add(part);
+        //            }
+        //        }
+        //        db.SaveChanges();
+        //        return true;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        ViewBag.Message = "Ошибка:" + ex.Message.ToString();
+        //        return false;
+        //    }
+        //}
+
+        private bool LoadImportData(int ImportId, string FileExtention) 
         {
-            try
-            {                
-                Import import = db.Imports.Find(ImportId);
-                Supplier supplier = db.Suppliers.Find(import.SupplierId);
-                ImportTemplate importTemplate = db.ImportTemplates.Find(supplier.ImportTemplateId);
-                FileInfo autopartsFile = new FileInfo(Server.MapPath("~/ImportFiles/" + import.FileName));
-                int firstDataRow = importTemplate.StartRow;
-
-                using (ExcelPackage package = new ExcelPackage(autopartsFile))
-                {
-                    ExcelWorksheet worksheet = package.Workbook.Worksheets.FirstOrDefault();
-                    for (int i = firstDataRow; i < worksheet.Dimension.End.Row; i++)
-                    {
-                        Part part = new Part
-                        {
-                            ImportId = import.Id,
-                            Brand = worksheet.Cells[importTemplate.BrandColumn + i.ToString()].Value.ToString(),
-                            Number = worksheet.Cells[importTemplate.NumberColumn + i.ToString()].Value.ToString(),
-                            Name = worksheet.Cells[importTemplate.NameColumn + i.ToString()].Value.ToString(),
-                            Details = worksheet.Cells[importTemplate.DetailsColumn + i.ToString()].Value.ToString(),
-                            Size = worksheet.Cells[importTemplate.SizeColumn + i.ToString()].Value.ToString(),
-                            Weight = worksheet.Cells[importTemplate.WeightColumn + i.ToString()].Value.ToString(),
-                            Quantity = worksheet.Cells[importTemplate.QuantityColumn + i.ToString()].Value.ToString(),
-                            Price = worksheet.Cells[importTemplate.PriceColumn + i.ToString()].Value.ToString(),
-                            SupplierId = Convert.ToInt32(import.SupplierId)
-                        };
-                        db.Parts.Add(part);
-                    }
-                }
-                db.SaveChanges();
-                return true;
-            }
-            catch (Exception ex)
+            if (FileExtention == ".xlsx")
             {
-                ViewBag.Message = "Ошибка:" + ex.Message.ToString();
-                return false;
+                return LoadImportDataXSLX(ImportId);
             }
+
+            if (FileExtention == ".csv")
+            {
+                return LoadImportDataCSV(ImportId);
+            }
+
+            return false;
         }
-
-
-        private bool LoadImportDataTEST(int ImportId)
+        
+        private bool LoadImportDataXSLX(int ImportId)
         {
             try
             {                
@@ -265,13 +283,14 @@ namespace AutoPartsWebSite.Controllers
                 db.SaveChanges();
                 return true;
             }
+
             catch (Exception ex)
             {
                 ViewBag.Message = "Ошибка импорта:" + ex.Message.ToString();               
                 return false;
             }
         }
-
+        
         public static void AddPartData(ref Dictionary<string, string> dicPartData)
         {
             using (PartModel db_Parts = new PartModel())
@@ -291,6 +310,68 @@ namespace AutoPartsWebSite.Controllers
                 };
                 db_Parts.Parts.Add(autopart);
                 db_Parts.SaveChanges();                               
+            }
+        }
+
+        private bool LoadImportDataCSV(int ImportId)
+        {
+            try
+            {
+                Import import = db.Imports.Find(ImportId);
+                int importId = import.Id;
+                int supplierId = Convert.ToInt32(import.SupplierId);
+                int linesNumber = 0;
+
+                Supplier supplier = db.Suppliers.Find(import.SupplierId);
+                ImportTemplate importTemplate = db.ImportTemplates.Find(supplier.ImportTemplateId);
+                int firstDataRow = importTemplate.StartRow;
+
+                FileInfo autopartsFile = new FileInfo(Server.MapPath("~/ImportFiles/" + import.FileName));
+                
+                CsvFileDescription inputFileDescription = new CsvFileDescription
+                {
+                    SeparatorChar = '\t', // tab delimited
+                    FirstLineHasColumnNames = false, // no column names in first record
+                    // FileCultureName = "ru-RU" // use formats used in The Netherlands
+                };
+                CsvContext cc = new CsvContext();
+                IEnumerable<CSVDataRow> products = cc.Read<CSVDataRow>(autopartsFile.ToString(), inputFileDescription);
+
+                Dictionary<string, string> dicPart = new Dictionary<string, string>();
+                foreach (CSVDataRow dataRow in products)
+                {
+                    dicPart.Clear();
+                    dicPart.Add("Id", Convert.ToString(importId));   // import ID                        
+                    dicPart.Add("Brand", Convert.ToString(dataRow[Convert.ToInt32(importTemplate.BrandColumn.Trim())].Value.ToString()));   //  Brand = 1
+                    dicPart.Add("Number", Convert.ToString(dataRow[Convert.ToInt32(importTemplate.NumberColumn.Trim())].Value.ToString()));   //  Number = 2
+                    dicPart.Add("Name", Convert.ToString(dataRow[Convert.ToInt32(importTemplate.NameColumn.Trim())].Value.ToString()));   //  Name = 4
+                    dicPart.Add("Details", Convert.ToString(dataRow[Convert.ToInt32(importTemplate.DetailsColumn.Trim())].Value.ToString()));   //  Details = 3
+                    dicPart.Add("Size", Convert.ToString(dataRow[Convert.ToInt32(importTemplate.SizeColumn.Trim())].Value.ToString()));   //  Size = 6
+                    dicPart.Add("Weight", Convert.ToString(dataRow[Convert.ToInt32(importTemplate.WeightColumn.Trim())].Value.ToString()));   //  Weight = 5
+                    dicPart.Add("Quantity", Convert.ToString(dataRow[Convert.ToInt32(importTemplate.QuantityColumn.Trim())].Value.ToString()));   //  Quantity = 10
+                    dicPart.Add("Price", Convert.ToString(dataRow[Convert.ToInt32(importTemplate.PriceColumn.Trim())].Value.ToString()));   //  Price = 8                        
+                    dicPart.Add("SupplierId", Convert.ToString(supplierId));   //  SupplierId = 7                        
+
+                    if (!string.IsNullOrEmpty(dicPart["Quantity"].Trim()))
+                    {
+                        if (dicPart["Quantity"].Trim() != "0")
+                        {
+                            AddPartData(ref dicPart);
+                            linesNumber++;
+                        }
+                    }
+                    //string firstFieldValue = dataRow[0].Value;
+                    //int firstFieldLineNbr = dataRow[0].LineNbr;
+                }                
+                ViewBag.Message = "Импорт завершен.";
+                import.LinesNumber = linesNumber;
+                db.SaveChanges();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                ViewBag.Message = "Ошибка импорта:" + ex.Message.ToString();
+                return false;
             }
         }
 
