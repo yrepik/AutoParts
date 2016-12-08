@@ -260,6 +260,7 @@
     <Content Include="packages.config" />
     <Content Include="Content\files\ALFAPARTS-Search.xlsx" />
     <Content Include="Content\files\ALFAPARTS-SearchAdmin.xlsx" />
+    <Content Include="AutoPartsDB\AutoPartsDB.zip" />
     <None Include="Scripts\jquery-1.12.4.intellisense.js" />
     <Content Include="Scripts\jquery-1.12.4.js" />
     <Content Include="Scripts\jquery-1.12.4.min.js" />
